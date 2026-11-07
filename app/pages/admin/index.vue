@@ -10,10 +10,21 @@ interface Stats {
 const { data, refresh } = await useFetch<Stats>('/api/admin/stats', { server: false })
 const { call } = useApi()
 
+function setFlag(key: string, enabled: boolean) {
+  if (data.value) data.value = { ...data.value, flags: data.value.flags.map(f => f.key === key ? { ...f, enabled } : f) }
+}
+
+/** Optimistic: flip the switch immediately, save in the background, roll back on failure. */
 async function toggle(key: string, enabled: boolean) {
-  await call(`/api/admin/ref/flags/${key}`, { method: 'PUT', body: { enabled } })
-  await refresh()
-  refreshNuxtData('bq-config')
+  setFlag(key, enabled)
+  try {
+    await call(`/api/admin/ref/flags/${key}`, { method: 'PUT', body: { enabled } })
+    refreshNuxtData('bq-config')
+    refresh()
+  }
+  catch {
+    setFlag(key, !enabled)
+  }
 }
 
 const cards = computed(() => data.value

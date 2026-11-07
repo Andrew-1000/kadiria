@@ -74,10 +74,29 @@ async function save() {
   finally { saving.value = false }
 }
 
+// useFetch data is a shallow ref: replace the row object (not mutate it) so Vue re-renders.
+function setRow(id: string, key: string, value: unknown) {
+  rows.value = rows.value.map(r => String(r[props.pk]) === id ? { ...r, [key]: value } : r)
+}
+
+const toggling = reactive(new Set<string>())
+
+/** Optimistic toggle: flip immediately, save in the background, roll back on failure. */
 async function toggle(row: Record<string, unknown>, key: string, value: boolean) {
-  await call(`/api/admin/ref/${props.name}/${encodeURIComponent(String(row[props.pk]))}`, { method: 'PUT', body: { [key]: value } })
-  row[key] = value
-  emit('changed')
+  const id = String(row[props.pk])
+  const previous = row[key]
+  setRow(id, key, value)
+  toggling.add(`${id}:${key}`)
+  try {
+    await call(`/api/admin/ref/${props.name}/${encodeURIComponent(id)}`, { method: 'PUT', body: { [key]: value } })
+    emit('changed')
+  }
+  catch {
+    setRow(id, key, previous)
+  }
+  finally {
+    toggling.delete(`${id}:${key}`)
+  }
 }
 
 const confirmDelete = ref<Record<string, unknown> | null>(null)
@@ -132,7 +151,7 @@ defineExpose({ refresh, rows })
         <tbody>
           <tr v-for="row in shown" :key="String(row[pk])">
             <td v-for="c in tableColumns" :key="c.key" :class="c.type === 'number' ? 'num' : ''">
-              <USwitch v-if="c.type === 'boolean' && c.inline" :model-value="Boolean(row[c.key])" size="sm" @update:model-value="(v: boolean) => toggle(row, c.key, v)" />
+              <USwitch v-if="c.type === 'boolean' && c.inline" :model-value="Boolean(row[c.key])" :loading="toggling.has(`${String(row[pk])}:${c.key}`)" size="sm" :aria-label="c.label" @update:model-value="(v: boolean) => toggle(row, c.key, v)" />
               <UIcon v-else-if="c.type === 'boolean'" :name="row[c.key] ? 'i-lucide-check' : 'i-lucide-minus'" :class="row[c.key] ? 'text-success' : 'text-dimmed'" />
               <span v-else>{{ display(row, c) }}</span>
             </td>
