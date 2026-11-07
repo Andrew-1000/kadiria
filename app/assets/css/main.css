@@ -1,0 +1,38 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: Georgia, 'Times New Roman', serif;
+}
+
+:root {
+  --ui-radius: 0.5rem;
+}
+
+.font-display { font-family: var(--font-serif); letter-spacing: -0.01em; }
+
+/* Formula blocks shown on calculator modules */
+.formula-block {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  border-left: 3px solid var(--ui-success);
+  background: color-mix(in oklab, var(--ui-success) 10%, transparent);
+  padding: 0.75rem 1rem;
+  border-radius: 0 var(--ui-radius) var(--ui-radius) 0;
+  overflow-x: auto;
+}
+
+/* Bill of Quantities document styling (screen + print) */
+.bq-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.bq-table th, .bq-table td { border-bottom: 1px solid var(--ui-border); padding: 0.4rem 0.5rem; vertical-align: top; }
+.bq-table th { text-align: left; font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ui-text-muted); }
+.bq-table td.num, .bq-table th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .print-page { break-after: page; }
+  .bq-table th, .bq-table td { border-color: #999; color: #000; }
+}

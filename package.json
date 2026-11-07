@@ -1,0 +1,40 @@
+{
+  "name": "davecore-bq",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Davecore BQ subsystem: construction cost estimator, material quantification calculators and professional Bill of Quantities drafting, backed by PostgreSQL.",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx server/db/migrate.ts",
+    "db:seed": "tsx server/db/seed.ts",
+    "db:setup": "npm run db:migrate && npm run db:seed",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@adonisjs/hash": "9.1.1",
+    "@iconify-json/lucide": "1.2.147",
+    "@nuxt/ui": "4.12.0",
+    "drizzle-orm": "0.45.4",
+    "nuxt": "4.6.2",
+    "nuxt-auth-utils": "0.5.32",
+    "postgres": "3.4.9",
+    "tailwindcss": "4.3.3",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "dotenv": "18.0.9",
+    "drizzle-kit": "0.31.11",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12",
+    "vue-tsc": "3.3.13"
+  }
+}

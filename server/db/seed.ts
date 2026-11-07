@@ -1,0 +1,83 @@
+import 'dotenv/config'
+import { and, eq, isNull, sql } from 'drizzle-orm'
+import { drizzle } from 'drizzle-orm/postgres-js'
+import postgres from 'postgres'
+import * as s from './schema'
+import * as d from './seed-data'
+import { MODULES } from '../../shared/calc/modules'
+
+const url = process.env.DATABASE_URL
+if (!url) throw new Error('DATABASE_URL is not set (copy .env.example to .env).')
+const client = postgres(url, { max: 1, onnotice: () => {} })
+const db = drizzle(client, { schema: s })
+const EFFECTIVE = '2026-01-01'
+
+await db.insert(s.featureFlags).values(d.FEATURE_FLAGS).onConflictDoNothing()
+await db.insert(s.calcConstants).values(d.CONSTANTS).onConflictDoNothing()
+await db.insert(s.settings).values({ key: 'embed_allowed_origins', value: [] }).onConflictDoNothing()
+await db.insert(s.countries).values(d.COUNTRIES).onConflictDoNothing()
+await db.insert(s.finishLevels).values(d.FINISHES).onConflictDoNothing()
+await db.insert(s.buildingTypes).values(d.BUILDING_TYPES).onConflictDoNothing()
+await db.insert(s.estimateAddons).values(d.ADDONS).onConflictDoNothing()
+await db.insert(s.elementSplits).values(d.ELEMENTS).onConflictDoNothing()
+await db.insert(s.mixDesigns).values(d.MIXES).onConflictDoNothing()
+await db.insert(s.billTemplates).values(d.BILLS.map((b, i) => ({ ...b, sort: i + 1 }))).onConflictDoNothing()
+await db.insert(s.calcModules).values(MODULES.map((m, i) => ({ key: m.key, enabled: true, sort: i + 1, defaults: {} }))).onConflictDoNothing()
+
+// Tiers, locations and their cost-per-m² bands
+for (const tier of d.TIERS) {
+  await db.insert(s.rateTiers).values({ countryCode: 'KE', key: tier.key, label: tier.label, sort: tier.sort }).onConflictDoNothing()
+  const [row] = await db.select().from(s.rateTiers).where(and(eq(s.rateTiers.countryCode, 'KE'), eq(s.rateTiers.key, tier.key)))
+  if (!row) continue
+  const existing = await db.select({ name: s.locations.name }).from(s.locations).where(eq(s.locations.tierId, row.id))
+  const names = new Set(existing.map(e => e.name))
+  let sort = 1
+  for (const [name, adjustmentPercent] of tier.locations) {
+    if (!names.has(name)) await db.insert(s.locations).values({ tierId: row.id, name, adjustmentPercent, sort })
+    sort++
+  }
+  const hasRates = await db.select({ id: s.costRates.id }).from(s.costRates).where(eq(s.costRates.tierId, row.id)).limit(1)
+  if (!hasRates.length) {
+    for (const [finishKey, [minRate, maxRate]] of Object.entries(d.COST_RATES[tier.key] ?? {})) {
+      await db.insert(s.costRates).values({ tierId: row.id, finishKey, minRate, maxRate, effectiveFrom: EFFECTIVE, note: '2026 Kenya market rates (seed)' })
+    }
+  }
+}
+
+// Materials and prices
+for (const [i, [key, name, unit, category, price]] of d.MATERIALS.entries()) {
+  await db.insert(s.materials).values({ key, name, unit, category, sort: i + 1 }).onConflictDoNothing()
+  const [m] = await db.select().from(s.materials).where(eq(s.materials.key, key))
+  if (!m) continue
+  const priced = await db.select({ id: s.materialPrices.id }).from(s.materialPrices).where(and(eq(s.materialPrices.materialId, m.id), isNull(s.materialPrices.locationId))).limit(1)
+  if (!priced.length) await db.insert(s.materialPrices).values({ materialId: m.id, price, effectiveFrom: EFFECTIVE, source: 'Seed: 2026 Nairobi market guides' })
+}
+for (const [locationName, key, price] of d.LOCATION_PRICES) {
+  const [loc] = await db.select().from(s.locations).where(eq(s.locations.name, locationName))
+  const [m] = await db.select().from(s.materials).where(eq(s.materials.key, key))
+  if (!loc || !m) continue
+  const priced = await db.select({ id: s.materialPrices.id }).from(s.materialPrices).where(and(eq(s.materialPrices.materialId, m.id), eq(s.materialPrices.locationId, loc.id))).limit(1)
+  if (!priced.length) await db.insert(s.materialPrices).values({ materialId: m.id, locationId: loc.id, price, effectiveFrom: EFFECTIVE, source: 'Seed: regional example' })
+}
+
+// BQ library
+await db.insert(s.libraryItems).values(d.LIBRARY.map(([code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault], i) => ({
+  code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault, sort: i + 1
+}))).onConflictDoNothing()
+
+// First administrator (same scrypt format as nuxt-auth-utils' hashPassword)
+const email = process.env.SEED_ADMIN_EMAIL
+const password = process.env.SEED_ADMIN_PASSWORD
+if (email && password) {
+  const [existing] = await db.select().from(s.users).where(sql`lower(${s.users.email}) = lower(${email})`)
+  if (!existing) {
+    const { hashPassword } = await import('./password')
+    await db.insert(s.users).values({ email, name: 'Administrator', role: 'admin', passwordHash: await hashPassword(password) })
+    console.log(`✔ Admin user created: ${email}`)
+  }
+} else {
+  console.log('ℹ SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set; no admin user created.')
+}
+
+console.log('✔ Seed complete')
+await client.end()
