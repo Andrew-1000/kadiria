@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type { BqLine, PricedMaterial, ResultLine } from '#shared/calc/types'
 
+/*
+ * Davecore Materials Takeoff: a cross-section drawing of the building is the menu. Click a part
+ * of the section (trench, footing, slab, wall, beam...) to take off its materials; results come
+ * out as a supplier's delivery docket. Calculations are the standard module engine.
+ */
 const props = defineProps<{
   /** When set, results can be added straight into this draft project. */
   projectId?: string
@@ -31,8 +36,10 @@ const active = computed(() => modules.value.find(m => m.key === activeKey.value)
 const activeIndex = computed(() => modules.value.findIndex(m => m.key === activeKey.value))
 const prevModule = computed(() => activeIndex.value > 0 ? modules.value[activeIndex.value - 1] : undefined)
 const nextModule = computed(() => activeIndex.value >= 0 ? modules.value[activeIndex.value + 1] : undefined)
+const seq = (key: string) => modules.value.findIndex(m => m.key === key) + 1
 
-// Global settings (shared by all modules)
+// Price list (shared by every element)
+const pricesOpen = ref(false)
 const settings = reactive({
   wastagePercent: 5,
   locationId: (props.projectLocationId ?? 0) as number,
@@ -41,8 +48,12 @@ const settings = reactive({
   ballast: null as number | null,
   projectName: ''
 })
+const currency = computed(() => config.value?.countries[0]?.currency ?? 'KES')
+const locationItems = computed(() => [{ label: 'National average prices', value: 0 }, ...locationSelectItems(config.value)])
+const locationName = computed(() => settings.locationId ? config.value?.locations.find(l => l.id === settings.locationId)?.name : 'National average')
+const ownRates = computed(() => (['cement', 'sand', 'ballast'] as const).filter(k => settings[k]).length)
 
-// Inputs per module, initialised from (admin-adjusted) defaults
+// Inputs per element, initialised from (admin-adjusted) defaults
 const inputs = reactive<Record<string, Record<string, number | string | undefined>>>({})
 watchEffect(() => {
   for (const m of modules.value) {
@@ -52,31 +63,73 @@ watchEffect(() => {
 
 const results = reactive<Record<string, RunResult | undefined>>({})
 const running = ref(false)
-const currency = computed(() => config.value?.countries[0]?.currency ?? 'KES')
-const locationItems = computed(() => [{ label: 'National average prices', value: 0 }, ...locationSelectItems(config.value)])
+const showMethod = ref(false)
 
 function optionsFor(input: NonNullable<typeof active.value>['inputs'][number]) {
   if (input.type === 'mix') return (config.value?.mixes ?? []).filter(m => m.kind === input.mixKind).map(m => ({ label: m.name, value: m.key }))
   return input.options ?? []
 }
+function overrides() {
+  const o: Record<string, number> = {}
+  for (const k of ['cement', 'sand', 'ballast'] as const) if (settings[k]) o[k] = Number(settings[k])
+  return o
+}
+const missingRequired = computed(() => active.value?.inputs.filter(i => i.required && !(Number(inputs[active.value!.key]?.[i.key]) > 0)).map(i => i.label) ?? [])
 
 async function run() {
-  if (!active.value) return
+  const m = active.value
+  if (!m) return
+  if (missingRequired.value.length) {
+    toast.add({ title: `Enter ${missingRequired.value.join(', ').toLowerCase()} first.`, color: 'warning', icon: 'i-lucide-ruler' })
+    return
+  }
   running.value = true
   try {
-    const overrides: Record<string, number> = {}
-    for (const k of ['cement', 'sand', 'ballast'] as const) if (settings[k]) overrides[k] = Number(settings[k])
-    results[active.value.key] = await call<RunResult>(`/api/public/modules/${active.value.key}`, {
+    results[m.key] = await call<RunResult>(`/api/public/modules/${m.key}`, {
       method: 'POST',
-      body: { inputs: inputs[active.value.key], locationId: settings.locationId || null, wastagePercent: settings.wastagePercent, priceOverrides: overrides }
+      body: { inputs: inputs[m.key], locationId: settings.locationId || null, wastagePercent: settings.wastagePercent, priceOverrides: overrides() }
     })
   }
+  catch { /* toast shown */ }
   finally { running.value = false }
 }
 
-const result = computed(() => active.value ? results[active.value.key] : undefined)
+// Once an element has been taken off, keep its docket in step with edits
+let timer: ReturnType<typeof setTimeout> | undefined
+watch([() => active.value && inputs[active.value.key], () => ({ ...settings })], () => {
+  if (!active.value || !results[active.value.key]) return
+  clearTimeout(timer)
+  timer = setTimeout(() => { if (!missingRequired.value.length) run() }, 500)
+}, { deep: true })
 
-// Push to BQ
+const result = computed(() => active.value ? results[active.value.key] : undefined)
+const docketNo = computed(() => `DC-${String(seq(activeKey.value)).padStart(2, '0')}${new Date().toISOString().slice(5, 10).replace('-', '')}`)
+
+/* ---------------- Cross-section drawing ---------------- */
+// Each element's shape(s) on the section and where its numbered bubble sits.
+interface Part { key: string, shapes: string[], bubble: [number, number], anchor: [number, number], kind?: 'fill' | 'hatch' | 'stones' | 'thin' }
+const PARTS: Part[] = [
+  { key: 'excavation', shapes: ['M 60 220 L 60 332 L 200 332 L 200 220'], bubble: [34, 300], anchor: [60, 300], kind: 'thin' },
+  { key: 'blinding', shapes: ['M 70 322 h 120 v 8 h -120 Z'], bubble: [226, 346], anchor: [190, 326] },
+  { key: 'strip_footing', shapes: ['M 76 292 h 108 v 30 h -108 Z'], bubble: [226, 306], anchor: [184, 306] },
+  { key: 'foundation_walling', shapes: ['M 106 206 h 48 v 86 h -48 Z'], bubble: [34, 246], anchor: [106, 246], kind: 'stones' },
+  { key: 'hardcore', shapes: ['M 154 206 h 352 v 22 h -352 Z'], bubble: [330, 252], anchor: [330, 228], kind: 'hatch' },
+  { key: 'ground_slab', shapes: ['M 100 194 h 460 v 12 h -460 Z'], bubble: [600, 200], anchor: [560, 200] },
+  { key: 'column_bases', shapes: ['M 470 284 h 90 v 28 h -90 Z'], bubble: [600, 298], anchor: [560, 298] },
+  { key: 'columns', shapes: ['M 506 96 h 20 v 98 h -20 Z', 'M 506 206 h 20 v 78 h -20 Z'], bubble: [600, 140], anchor: [526, 140] },
+  { key: 'walling', shapes: ['M 112 96 h 36 v 98 h -36 Z'], bubble: [34, 146], anchor: [112, 146], kind: 'stones' },
+  { key: 'plaster', shapes: ['M 106 96 h 6 v 98 h -6 Z', 'M 148 96 h 6 v 98 h -6 Z'], bubble: [226, 170], anchor: [154, 170] },
+  { key: 'beams', shapes: ['M 106 82 h 420 v 14 h -420 Z'], bubble: [330, 120], anchor: [330, 96] },
+  { key: 'suspended_slab', shapes: ['M 90 68 h 480 v 14 h -480 Z'], bubble: [600, 75], anchor: [570, 75] }
+]
+const parts = computed(() => PARTS.map(p => ({ ...p, n: seq(p.key), enabled: modules.value.some(m => m.key === p.key) })))
+const hovered = ref<string | null>(null)
+const nameOf = (key: string) => modules.value.find(m => m.key === key)?.name ?? key
+function pick(key: string) {
+  if (modules.value.some(m => m.key === key)) activeKey.value = key
+}
+
+/* ---------------- Send to BQ ---------------- */
 const pushOpen = ref(false)
 const targetProject = ref<string | undefined>(props.projectId)
 const selectedLines = ref<string[]>([])
@@ -95,11 +148,9 @@ async function push() {
   if (!targetProject.value || !active.value) return
   pushing.value = true
   try {
-    const overrides: Record<string, number> = {}
-    for (const k of ['cement', 'sand', 'ballast'] as const) if (settings[k]) overrides[k] = Number(settings[k])
     const res = await call<{ added: unknown[] }>(`/api/projects/${targetProject.value}/calculator`, {
       method: 'POST',
-      body: { moduleKey: active.value.key, inputs: inputs[active.value.key], locationId: settings.locationId || null, wastagePercent: settings.wastagePercent, priceOverrides: overrides, lines: selectedLines.value.map(Number) }
+      body: { moduleKey: active.value.key, inputs: inputs[active.value.key], locationId: settings.locationId || null, wastagePercent: settings.wastagePercent, priceOverrides: overrides(), lines: selectedLines.value.map(Number) }
     })
     pushOpen.value = false
     toast.add({ title: `${res.added.length} item(s) added to the BQ`, color: 'success', icon: 'i-lucide-check' })
@@ -114,253 +165,327 @@ function printReport() {
 </script>
 
 <template>
-  <div v-if="config" class="max-w-4xl mx-auto">
+  <div v-if="config" class="max-w-6xl mx-auto">
     <div v-if="config.flags.material_calculators === false || !modules.length" class="text-center py-16">
       <UIcon name="i-lucide-power-off" class="size-10 text-dimmed" />
       <p class="mt-3 text-muted">
         The material calculators are currently unavailable.
       </p>
     </div>
-    <UCard v-else :ui="{ root: 'rounded-2xl overflow-hidden', body: 'p-0 sm:p-0', header: 'p-0 sm:p-0' }">
-      <template #header>
-        <div class="bg-gradient-to-br from-blue-950 to-blue-800 text-white px-6 sm:px-8 pt-6 pb-0 no-print-bg">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <p class="text-[11px] font-bold tracking-[0.2em] uppercase text-sky-300">
-                — Mafundi Calculator —
-              </p>
-              <h2 class="mt-2 text-2xl sm:text-3xl font-extrabold">
-                Material Quantification Module
-              </h2>
-              <p class="mt-2 text-sm text-white/70 max-w-lg">
-                Calculate individual building elements using standard Kenyan construction practice. Full formula display, editable assumptions, cost estimates and a printable report.
-              </p>
-            </div>
-            <div class="text-right shrink-0">
-              <p class="text-4xl font-extrabold text-sky-300 tabular-nums">
-                {{ modules.length }}
-              </p>
-              <p class="text-[10px] tracking-[0.2em] uppercase text-white/60">
-                Modules
-              </p>
-            </div>
+
+    <div v-else class="rounded-sm border-2 border-accented p-1.5">
+      <div class="border border-default">
+        <!-- Sheet header -->
+        <header class="flex flex-wrap items-stretch border-b border-default">
+          <div class="flex-1 min-w-[16rem] px-5 py-4">
+            <p class="text-[10px] uppercase tracking-[0.25em] text-muted">
+              Davecore · Materials takeoff
+            </p>
+            <h2 class="font-display text-2xl sm:text-3xl font-bold text-highlighted mt-1">
+              Pick a part of the building
+            </h2>
+            <p class="text-sm text-muted mt-1">
+              Click any element on the section, give its dimensions and get a delivery docket of cement, sand, ballast, steel and stone, priced for your area.
+            </p>
           </div>
-          <div class="mt-5 -mx-6 sm:-mx-8 px-4 sm:px-6 overflow-x-auto no-print">
-            <div class="flex gap-1 min-w-max">
+          <button
+            type="button"
+            class="border-s border-default px-4 py-3 text-left text-xs hover:bg-elevated/50 transition min-w-[14rem] no-print"
+            :aria-expanded="pricesOpen"
+            @click="pricesOpen = !pricesOpen"
+          >
+            <span class="text-[9px] uppercase tracking-widest text-dimmed flex items-center justify-between">
+              Price list <UIcon :name="pricesOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" />
+            </span>
+            <span class="block mt-1 font-medium text-sm">{{ locationName }}</span>
+            <span class="block text-muted font-mono">+{{ settings.wastagePercent }}% waste<template v-if="ownRates"> · {{ ownRates }} own rate{{ ownRates > 1 ? 's' : '' }}</template></span>
+          </button>
+        </header>
+
+        <!-- Price list panel -->
+        <div v-if="pricesOpen" class="border-b border-default bg-elevated/40 px-5 py-4 grid grid-cols-2 md:grid-cols-6 gap-3 no-print">
+          <UFormField label="Prices for" class="col-span-2">
+            <USelect v-model="settings.locationId" :items="locationItems" class="w-full" />
+          </UFormField>
+          <UFormField label="Wastage %">
+            <UInput v-model.number="settings.wastagePercent" type="number" min="0" max="50" class="w-full" :ui="{ base: 'font-mono' }" />
+          </UFormField>
+          <UFormField :label="`Cement /bag`">
+            <UInput v-model.number="settings.cement" type="number" min="0" placeholder="list price" class="w-full" :ui="{ base: 'font-mono' }" />
+          </UFormField>
+          <UFormField :label="`Sand /t`">
+            <UInput v-model.number="settings.sand" type="number" min="0" placeholder="list price" class="w-full" :ui="{ base: 'font-mono' }" />
+          </UFormField>
+          <UFormField :label="`Ballast /t`">
+            <UInput v-model.number="settings.ballast" type="number" min="0" placeholder="list price" class="w-full" :ui="{ base: 'font-mono' }" />
+          </UFormField>
+          <UFormField label="Docket reference" class="col-span-2">
+            <UInput v-model="settings.projectName" placeholder="e.g. Kiambu Bungalow" class="w-full" />
+          </UFormField>
+          <p class="col-span-2 md:col-span-4 self-end text-xs text-muted">
+            Leave rates blank to use Davecore's {{ currency }} list prices for the selected area.
+          </p>
+        </div>
+
+        <!-- Section drawing + element card -->
+        <div class="grid lg:grid-cols-[minmax(0,1fr)_20rem] border-b border-default">
+          <div class="lg:border-e border-default p-2 sm:p-4">
+            <p class="px-1 text-[10px] uppercase tracking-widest text-dimmed flex justify-between">
+              <span>Section A–A · typical wall, foundation and floor</span>
+              <span class="font-mono normal-case tracking-normal">{{ hovered ? nameOf(hovered) : 'hover or click a part' }}</span>
+            </p>
+            <svg viewBox="0 0 640 360" class="w-full mt-1 no-print" role="group" aria-label="Building cross-section. Select an element to take off.">
+              <defs>
+                <pattern id="dc-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                  <line x1="0" y1="0" x2="0" y2="7" class="stroke-(--ui-border-accented)" stroke-width="1.2" />
+                </pattern>
+                <pattern id="dc-soil" width="14" height="14" patternUnits="userSpaceOnUse">
+                  <circle cx="3" cy="4" r="0.9" class="fill-(--ui-text-dimmed)" />
+                  <circle cx="10" cy="10" r="0.9" class="fill-(--ui-text-dimmed)" />
+                </pattern>
+                <pattern id="dc-stones" width="18" height="10" patternUnits="userSpaceOnUse">
+                  <rect x="0.5" y="0.5" width="17" height="9" fill="none" class="stroke-(--ui-text-dimmed)" stroke-width="0.8" />
+                </pattern>
+              </defs>
+              <!-- soil -->
+              <rect x="0" y="220" width="640" height="140" fill="url(#dc-soil)" opacity="0.5" />
+              <line x1="0" y1="220" x2="640" y2="220" class="stroke-(--ui-text-muted)" stroke-width="2" />
+              <text x="8" y="214" font-size="9" font-family="ui-monospace, monospace" class="fill-(--ui-text-dimmed)">GL</text>
+              <!-- upper wall (context) -->
+              <rect x="112" y="16" width="36" height="52" fill="url(#dc-stones)" opacity="0.4" />
+
+              <g
+                v-for="p in parts"
+                :key="p.key"
+                :class="p.enabled ? 'cursor-pointer' : 'opacity-25 pointer-events-none'"
+                role="button"
+                :tabindex="p.enabled ? 0 : -1"
+                :aria-label="`${p.n > 0 ? `${p.n}. ` : ''}${nameOf(p.key)}`"
+                :aria-pressed="activeKey === p.key"
+                @click="pick(p.key)"
+                @keydown.enter.prevent="pick(p.key)"
+                @keydown.space.prevent="pick(p.key)"
+                @mouseenter="hovered = p.key"
+                @mouseleave="hovered = null"
+              >
+                <title>{{ nameOf(p.key) }}</title>
+                <path
+                  v-for="(d, i) in p.shapes"
+                  :key="i"
+                  :d="d"
+                  :fill="p.kind === 'hatch' ? 'url(#dc-hatch)' : p.kind === 'stones' ? 'url(#dc-stones)' : p.kind === 'thin' ? 'none' : undefined"
+                  :stroke-dasharray="p.kind === 'thin' ? '5 4' : undefined"
+                  stroke-width="1.5"
+                  class="transition-colors"
+                  :class="[
+                    activeKey === p.key ? 'stroke-primary' : hovered === p.key ? 'stroke-primary/70' : 'stroke-(--ui-text-muted)',
+                    p.kind ? '' : activeKey === p.key ? 'fill-primary/55' : hovered === p.key ? 'fill-primary/25' : 'fill-(--ui-bg-accented)'
+                  ]"
+                />
+                <!-- wider invisible hit area for thin parts -->
+                <path v-for="(d, i) in p.shapes" :key="`hit${i}`" :d="d" fill="transparent" stroke="transparent" stroke-width="10" />
+                <line :x1="p.bubble[0]" :y1="p.bubble[1]" :x2="p.anchor[0]" :y2="p.anchor[1]" class="stroke-(--ui-border-accented)" stroke-width="1" />
+                <circle :cx="p.bubble[0]" :cy="p.bubble[1]" r="11" :class="activeKey === p.key ? 'fill-primary stroke-primary' : 'fill-(--ui-bg) stroke-(--ui-text-muted)'" stroke-width="1.5" />
+                <text :x="p.bubble[0]" :y="p.bubble[1] + 4" text-anchor="middle" font-size="10" font-weight="700" font-family="ui-monospace, monospace" :class="activeKey === p.key ? 'fill-(--ui-bg)' : 'fill-(--ui-text-highlighted)'">
+                  {{ p.n > 0 ? p.n : '–' }}
+                </text>
+                <circle v-if="results[p.key]" :cx="p.bubble[0] + 9" :cy="p.bubble[1] - 9" r="3.5" class="fill-success" />
+              </g>
+            </svg>
+            <!-- compact list (keyboard/mobile friendly) -->
+            <div class="mt-2 flex flex-wrap gap-1 no-print">
               <button
                 v-for="m in modules"
                 :key="m.key"
                 type="button"
-                class="flex items-center gap-1.5 px-3 py-3 text-[11px] font-bold tracking-wider uppercase border-b-2 transition whitespace-nowrap"
-                :class="activeKey === m.key ? 'border-sky-300 text-sky-300' : 'border-transparent text-white/60 hover:text-white'"
+                class="rounded-full border px-2.5 py-0.5 text-xs transition"
+                :class="activeKey === m.key ? 'border-primary bg-primary text-inverted' : 'border-default text-muted hover:text-default'"
                 @click="activeKey = m.key"
               >
-                <span class="opacity-60 tabular-nums">{{ String(modules.indexOf(m) + 1).padStart(2, '0') }}</span>
-                <UIcon :name="m.icon" class="size-4" /> {{ m.short }}
+                <span class="font-mono opacity-70">{{ seq(m.key) }}</span> {{ m.short }}
               </button>
             </div>
           </div>
-        </div>
-      </template>
 
-      <div class="p-5 sm:p-8 space-y-6">
-        <!-- Global settings -->
-        <div class="rounded-xl border border-default p-4 space-y-4 no-print">
-          <p class="text-[11px] font-bold tracking-[0.14em] uppercase text-muted">
-            <UIcon name="i-lucide-settings" class="align-[-2px]" /> Global settings: applied to all modules
-          </p>
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <UFormField label="Wastage allowance (%)" class="col-span-1">
-              <UInput v-model.number="settings.wastagePercent" type="number" min="0" max="50" class="w-full" />
-            </UFormField>
-            <UFormField label="Price location" class="col-span-1 lg:col-span-3">
-              <USelect v-model="settings.locationId" :items="locationItems" class="w-full" placeholder="National average prices" />
-            </UFormField>
-            <UFormField :label="`Cement rate (${currency}/bag)`">
-              <UInput v-model.number="settings.cement" type="number" min="0" placeholder="Admin price" class="w-full" />
-            </UFormField>
-            <UFormField :label="`Sand rate (${currency}/tonne)`">
-              <UInput v-model.number="settings.sand" type="number" min="0" placeholder="Admin price" class="w-full" />
-            </UFormField>
-            <UFormField :label="`Ballast rate (${currency}/tonne)`">
-              <UInput v-model.number="settings.ballast" type="number" min="0" placeholder="Admin price" class="w-full" />
-            </UFormField>
-            <UFormField label="Project name">
-              <UInput v-model="settings.projectName" placeholder="e.g. Kiambu Bungalow" class="w-full" />
-            </UFormField>
-          </div>
-          <p class="text-xs text-muted">
-            Leave rates blank to use the prices maintained by the administrator for the selected location.
-          </p>
-        </div>
-
-        <template v-if="active">
-          <div class="flex items-start gap-3">
-            <span class="size-9 shrink-0 rounded-lg bg-elevated grid place-items-center"><UIcon :name="active.icon" class="text-primary size-5" /></span>
-            <div>
-              <h3 class="font-semibold text-highlighted text-lg">
-                {{ active.name }}
-              </h3>
-              <p class="text-sm text-muted">
-                {{ active.description }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Where this element sits in the construction sequence -->
-          <div v-if="active.onSite" class="rounded-lg border border-default bg-elevated/40 p-4 no-print">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <p class="text-xs font-semibold uppercase tracking-wider text-muted">
-                <UIcon name="i-lucide-hard-hat" class="align-[-2px] text-primary" />
-                On site · step {{ activeIndex + 1 }} of {{ modules.length }} · {{ active.stage }}
-              </p>
-              <div class="flex gap-1">
-                <UButton v-if="prevModule" size="xs" color="neutral" variant="ghost" icon="i-lucide-arrow-left" :label="prevModule.short" @click="activeKey = prevModule.key" />
-                <UButton v-if="nextModule" size="xs" color="neutral" variant="outline" trailing-icon="i-lucide-arrow-right" :label="`Next: ${nextModule.short}`" @click="activeKey = nextModule.key" />
+          <!-- Element card -->
+          <aside v-if="active" class="p-4 flex flex-col">
+            <div class="flex items-start gap-3">
+              <span class="size-11 shrink-0 rounded-full border-2 border-primary text-primary grid place-items-center font-mono font-bold text-lg">{{ activeIndex + 1 }}</span>
+              <div class="min-w-0">
+                <p class="text-[10px] uppercase tracking-widest text-dimmed">
+                  {{ active.stage || 'Element' }} · step {{ activeIndex + 1 }} of {{ modules.length }}
+                </p>
+                <h3 class="font-display text-lg font-semibold text-highlighted leading-snug">
+                  {{ active.name }}
+                </h3>
               </div>
             </div>
-            <p class="mt-2 text-sm">
+            <p class="mt-3 text-sm text-muted">
+              {{ active.description }}
+            </p>
+            <div v-if="active.onSite" class="mt-3 border-s-2 border-primary/60 ps-3 text-sm">
+              <p class="text-[10px] uppercase tracking-widest text-dimmed mb-0.5">
+                On site
+              </p>
               {{ active.onSite }}
-            </p>
-            <p v-if="nextModule" class="mt-1 text-xs text-muted">
-              Then: {{ nextModule.name.toLowerCase() }}.
-            </p>
-            <p v-else class="mt-1 text-xs text-muted">
-              This is the last element here. Roofing, doors, windows and services are priced in the full BQ.
-            </p>
-          </div>
-
-          <div class="formula-block">
-            <div v-for="(f, i) in active.formula" :key="i">
-              {{ f }}
             </div>
-          </div>
-
-          <form class="grid grid-cols-1 sm:grid-cols-2 gap-4 no-print" @submit.prevent="run">
-            <UFormField
-              v-for="input in active.inputs"
-              :key="input.key"
-              :label="`${input.label}${input.unit ? ` (${input.unit})` : ''}`"
-              :hint="input.default !== undefined && input.type !== 'mix' && input.type !== 'select' ? `default ${input.default}` : undefined"
-              :help="input.help"
-              :required="input.required"
-            >
-              <USelect
-                v-if="input.type === 'mix' || input.type === 'select' || input.type === 'bar'"
-                v-model="inputs[active.key]![input.key]"
-                :items="optionsFor(input)"
-                class="w-full"
-              />
-              <UInput
-                v-else
-                v-model.number="inputs[active.key]![input.key]"
-                type="number"
-                :min="input.min"
-                :max="input.max"
-                :step="input.step ?? 0.01"
-                :placeholder="input.required ? 'e.g. 45' : undefined"
-                class="w-full"
-              />
-            </UFormField>
-            <div class="sm:col-span-2">
-              <UButton type="submit" block size="lg" color="neutral" icon="i-lucide-zap" :loading="running" :label="`Calculate ${active.name}`" />
+            <div class="mt-auto pt-4 flex items-center justify-between gap-2 no-print">
+              <UButton v-if="prevModule" size="xs" color="neutral" variant="ghost" icon="i-lucide-arrow-left" :label="prevModule.short" @click="activeKey = prevModule.key" />
+              <span v-else />
+              <UButton v-if="nextModule" size="xs" color="neutral" variant="outline" trailing-icon="i-lucide-arrow-right" :label="`Then: ${nextModule.short}`" @click="activeKey = nextModule.key" />
+              <span v-else class="text-[11px] text-dimmed text-right">Last element: roofing, doors and services are priced in the full BQ.</span>
             </div>
+          </aside>
+        </div>
+
+        <!-- Dimensions + docket -->
+        <div v-if="active" class="grid lg:grid-cols-2">
+          <!-- Dimensions -->
+          <form class="p-5 lg:border-e border-default space-y-4 no-print" @submit.prevent="run">
+            <div class="flex items-center justify-between">
+              <h3 class="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
+                Dimensions &amp; specification
+              </h3>
+              <UButton size="xs" color="neutral" variant="ghost" :icon="showMethod ? 'i-lucide-chevron-up' : 'i-lucide-sigma'" :label="showMethod ? 'Hide method' : 'Method'" @click="showMethod = !showMethod" />
+            </div>
+            <div v-if="showMethod" class="formula-block">
+              <div v-for="(f, i) in active.formula" :key="i">
+                {{ f }}
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+              <UFormField
+                v-for="input in active.inputs"
+                :key="input.key"
+                :label="input.label"
+                :help="input.help"
+                :required="input.required"
+                :class="input.type === 'mix' || input.type === 'select' ? 'col-span-2' : ''"
+              >
+                <USelect
+                  v-if="input.type === 'mix' || input.type === 'select' || input.type === 'bar'"
+                  v-model="inputs[active.key]![input.key]"
+                  :items="optionsFor(input)"
+                  class="w-full"
+                />
+                <UInput
+                  v-else
+                  v-model.number="inputs[active.key]![input.key]"
+                  type="number"
+                  :min="input.min"
+                  :max="input.max"
+                  :step="input.step ?? 0.01"
+                  :placeholder="input.default === undefined ? 'measure on site' : String(input.default)"
+                  class="w-full"
+                  :ui="{ base: 'font-mono' }"
+                >
+                  <template v-if="input.unit" #trailing>
+                    <span class="text-xs text-muted">{{ input.unit }}</span>
+                  </template>
+                </UInput>
+              </UFormField>
+            </div>
+            <UButton type="submit" block size="lg" icon="i-lucide-clipboard-list" :loading="running" :label="result ? 'Refresh docket' : `Take off ${active.short.toLowerCase()}`" />
           </form>
 
-          <div v-if="result" class="space-y-5">
-            <UAlert v-for="(w, i) in result.warnings" :key="i" color="warning" variant="subtle" icon="i-lucide-triangle-alert" :title="w" />
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div v-for="line in result.lines" :key="line.label" class="rounded-lg border border-default p-3" :class="line.emphasis ? 'bg-primary/5 border-primary/40' : ''">
-                <p class="text-xs text-muted">
-                  {{ line.label }}
-                </p>
-                <p class="mt-1 text-lg font-semibold tabular-nums text-highlighted">
-                  {{ formatNumber(line.value, 3) }} <span class="text-xs font-normal text-muted">{{ line.unit }}</span>
+          <!-- Delivery docket -->
+          <div class="p-5 bg-elevated/30">
+            <div v-if="!result" class="h-full min-h-56 grid place-items-center text-center rounded-md border-2 border-dashed border-default p-6">
+              <div>
+                <UIcon name="i-lucide-receipt-text" class="size-8 text-dimmed" />
+                <p class="mt-2 text-sm text-muted">
+                  Your delivery docket for <b>{{ active.name.toLowerCase() }}</b> appears here.
                 </p>
               </div>
             </div>
+            <div v-else class="rounded-md bg-default border border-default shadow-sm" :class="running ? 'opacity-60' : ''">
+              <!-- perforated top edge -->
+              <div class="h-2 rounded-t-md bg-[radial-gradient(circle_at_6px_0,transparent_4px,var(--ui-bg-elevated)_4.5px)] bg-[length:12px_8px]" aria-hidden="true" />
+              <div class="px-4 pt-2 pb-3 border-b border-dashed border-default flex justify-between gap-3 text-xs">
+                <div>
+                  <p class="font-display font-bold text-sm text-highlighted">
+                    Delivery docket
+                  </p>
+                  <p class="text-muted">
+                    {{ result.module.name }}{{ settings.projectName ? ` · ${settings.projectName}` : '' }}
+                  </p>
+                </div>
+                <div class="text-right font-mono text-muted">
+                  <p>No. {{ docketNo }}</p>
+                  <p>{{ locationName }}</p>
+                </div>
+              </div>
 
-            <div class="overflow-x-auto rounded-lg border border-default">
-              <table class="bq-table min-w-[560px]">
+              <UAlert v-for="(w, i) in result.warnings" :key="i" class="m-3" color="warning" variant="soft" icon="i-lucide-triangle-alert" :title="w" />
+
+              <table class="w-full text-sm">
                 <thead>
-                  <tr>
-                    <th>Material</th>
-                    <th class="num">
-                      Net qty
+                  <tr class="text-[10px] uppercase tracking-widest text-dimmed">
+                    <th class="text-right font-medium px-3 py-2 w-20">
+                      Qty
                     </th>
-                    <th class="num">
-                      Order (+{{ settings.wastagePercent }}%)
+                    <th class="text-left font-medium py-2">
+                      Item
                     </th>
-                    <th class="num">
-                      Unit price
-                    </th>
-                    <th class="num">
+                    <th class="text-right font-medium px-3 py-2">
                       Amount
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-dashed divide-(--ui-border)">
                   <tr v-for="m in result.materials" :key="m.materialKey">
-                    <td>
+                    <td class="text-right font-mono font-semibold px-3 py-2 align-top">
+                      {{ formatNumber(m.quantity, 2) }}
+                    </td>
+                    <td class="py-2">
                       {{ m.label }}
-                      <UBadge v-if="m.priceSource === 'location'" size="sm" variant="subtle" color="info" label="local price" class="ms-1" />
-                      <UBadge v-else-if="m.priceSource === 'override'" size="sm" variant="subtle" color="warning" label="your rate" class="ms-1" />
-                      <UBadge v-else-if="m.priceSource === 'missing'" size="sm" variant="subtle" color="error" label="no price" class="ms-1" />
+                      <span class="block text-[11px] text-muted">
+                        {{ m.unit }} @ {{ m.unitPrice !== null ? formatNumber(m.unitPrice, 0) : '—' }}
+                        <template v-if="m.priceSource === 'location'"> · local price</template>
+                        <template v-else-if="m.priceSource === 'override'"> · your rate</template>
+                        <template v-else-if="m.priceSource === 'missing'"> · no price set</template>
+                      </span>
                     </td>
-                    <td class="num">
-                      {{ formatNumber(m.netQuantity, 3) }}
-                    </td>
-                    <td class="num font-semibold">
-                      {{ formatNumber(m.quantity, 2) }} {{ m.unit }}
-                    </td>
-                    <td class="num">
-                      {{ formatMoney(m.unitPrice, currency) }}
-                    </td>
-                    <td class="num">
-                      {{ formatMoney(m.amount, currency) }}
+                    <td class="text-right font-mono px-3 py-2 align-top">
+                      {{ m.amount !== null ? formatNumber(m.amount, 0) : '—' }}
                     </td>
                   </tr>
                   <tr v-if="!result.materials.length">
-                    <td colspan="5" class="text-center text-muted">
-                      This element is labour/measurement only; no materials.
+                    <td colspan="3" class="px-3 py-4 text-center text-muted">
+                      Labour and plant only, with no materials to deliver.
                     </td>
                   </tr>
                 </tbody>
-                <tfoot v-if="result.materials.length">
-                  <tr>
-                    <td colspan="4" class="font-semibold">
-                      Estimated material cost
-                    </td>
-                    <td class="num font-bold text-primary">
-                      {{ formatMoney(result.materialsTotal, currency) }}
-                    </td>
-                  </tr>
-                </tfoot>
               </table>
+              <div class="px-4 py-3 border-t-2 border-default flex items-baseline justify-between">
+                <span class="text-xs text-muted">Total incl. {{ settings.wastagePercent }}% waste · {{ currency }}</span>
+                <span class="font-mono text-xl font-bold text-primary">{{ formatNumber(result.materialsTotal, 0) }}</span>
+              </div>
+              <div class="px-4 pb-3 text-[11px] text-muted font-mono flex flex-wrap gap-x-4 gap-y-0.5">
+                <span v-for="l in result.lines" :key="l.label">{{ l.label }}: {{ formatNumber(l.value, 2) }} {{ l.unit }}</span>
+              </div>
+              <details class="border-t border-dashed border-default">
+                <summary class="cursor-pointer select-none px-4 py-2 text-xs font-medium">
+                  {{ result.bqLines.length }} BQ line{{ result.bqLines.length === 1 ? '' : 's' }} from this takeoff
+                </summary>
+                <ul class="px-4 pb-3 text-xs space-y-1">
+                  <li v-for="(b, i) in result.bqLines" :key="i" class="flex justify-between gap-3">
+                    <span class="text-muted">{{ b.description }}</span>
+                    <span class="font-mono whitespace-nowrap">{{ formatNumber(b.quantity, 2) }} {{ b.unit }}</span>
+                  </li>
+                </ul>
+              </details>
             </div>
 
-            <div>
-              <p class="text-sm font-semibold mb-2">
-                BQ items from this calculation
-              </p>
-              <ul class="text-sm divide-y divide-default rounded-lg border border-default">
-                <li v-for="(b, i) in result.bqLines" :key="i" class="flex justify-between gap-4 px-3 py-2">
-                  <span>{{ b.description }}</span>
-                  <span class="tabular-nums whitespace-nowrap font-medium">{{ formatNumber(b.quantity, 2) }} {{ b.unit }}</span>
-                </li>
-              </ul>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-3 no-print">
+            <div v-if="result" class="mt-3 flex flex-col sm:flex-row gap-2 no-print">
               <UButton v-if="loggedIn && !embedded" class="flex-1 justify-center" icon="i-lucide-file-plus" label="Add to a BQ project" @click="openPush" />
-              <UButton v-else-if="!embedded" class="flex-1 justify-center" color="neutral" variant="outline" icon="i-lucide-log-in" label="Sign in to add these to a BQ" :to="`/login?redirect=/calculators`" />
-              <UButton class="flex-1 justify-center" color="neutral" variant="outline" icon="i-lucide-printer" label="Print / save PDF report" @click="printReport" />
+              <UButton v-else-if="!embedded" class="flex-1 justify-center" color="neutral" variant="outline" icon="i-lucide-log-in" label="Sign in to add to a BQ" :to="`/login?redirect=/calculators`" />
+              <UButton class="flex-1 justify-center" color="neutral" variant="outline" icon="i-lucide-printer" label="Print docket" @click="printReport" />
             </div>
           </div>
-        </template>
+        </div>
       </div>
-    </UCard>
+    </div>
 
     <UModal v-model:open="pushOpen" title="Add to Bill of Quantities" :description="projectId ? 'Choose which lines to add to this BQ.' : 'Choose a draft project and the lines to add.'">
       <template #body>
