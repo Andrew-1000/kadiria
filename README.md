@@ -24,12 +24,13 @@ Requires Node.js 20+ and PostgreSQL 14+.
 ```powershell
 npm install
 
-# 1. Create a database and user (run as the postgres superuser), for example in psql:
-#    CREATE ROLE davecore_bq LOGIN PASSWORD 'choose-a-strong-password';
-#    CREATE DATABASE davecore_bq OWNER davecore_bq;
+# 1. Configure the environment
+copy .env.example .env      # then edit: choose a password for davecore_bq in DATABASE_URL,
+                            # set NUXT_SESSION_PASSWORD (32+ chars) and SEED_ADMIN_*
 
-# 2. Configure the environment
-copy .env.example .env      # then edit DATABASE_URL, NUXT_SESSION_PASSWORD, SEED_ADMIN_*
+# 2. Create the database user + database from DATABASE_URL
+#    (asks once for your PostgreSQL "postgres" superuser password; it is not stored)
+npm run db:create
 
 # 3. Create tables and load Kenyan reference data + first admin
 npm run db:setup
@@ -37,6 +38,10 @@ npm run db:setup
 # 4. Run
 npm run dev                 # http://localhost:3000
 ```
+
+If the dev server prints **"Davecore BQ cannot use the database"**, it tells you which step is missing (placeholder password, wrong password, missing database or missing tables).
+
+Forgot the `postgres` superuser password? Temporarily set `host all all 127.0.0.1/32 trust` in `pg_hba.conf` (in the PostgreSQL data folder), restart the PostgreSQL service, run `ALTER USER postgres PASSWORD 'new-password';` in psql, then restore the original line and restart again.
 
 Sign in with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`, then open **Admin back-office**. The seed only inserts missing rows, so re-running it never overwrites admin changes.
 
