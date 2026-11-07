@@ -27,7 +27,7 @@ const groups = computed(() => tiers.value.map(tier => ({ tier, locations: (confi
 const location = computed(() => config.value?.locations.find(l => l.id === locationId.value))
 const buildingType = computed(() => config.value?.buildingTypes.find(b => b.key === buildingTypeKey.value))
 const finish = computed(() => config.value?.finishes.find(f => f.key === finishKey.value))
-const tierDots = ['bg-amber-600', 'bg-green-600', 'bg-orange-700', 'bg-sky-600']
+const tierDots = ['bg-blue-600', 'bg-sky-500', 'bg-indigo-400', 'bg-cyan-600']
 
 function band(tierId: number | undefined, fk: string) {
   return config.value?.rates.find(r => r.tierId === tierId && r.finishKey === fk)
@@ -222,7 +222,7 @@ const bqLink = computed(() => ({
           </div>
 
           <div class="rounded-xl border border-default bg-elevated/40 p-4 overflow-x-auto">
-            <p class="text-xs font-bold tracking-wider uppercase text-success mb-3">
+            <p class="text-xs font-bold tracking-wider uppercase text-primary mb-3">
               <UIcon name="i-lucide-chart-column" class="align-[-2px]" /> {{ new Date().getFullYear() }} {{ country?.name }} market rates (per m²)
             </p>
             <table class="w-full text-sm min-w-[520px]">
@@ -265,7 +265,7 @@ const bqLink = computed(() => ({
                 :class="finishKey === f.key ? 'border-primary bg-primary/5 ring-1 ring-primary/40' : 'border-default'"
                 @click="finishKey = f.key"
               >
-                <div class="h-1.5 rounded-full mb-3" :class="['bg-green-600', 'bg-amber-700', 'bg-amber-500'][fi % 3]" />
+                <div class="h-1.5 rounded-full mb-3" :class="['bg-sky-400', 'bg-blue-600', 'bg-indigo-700'][fi % 3]" />
                 <UIcon v-if="finishKey === f.key" name="i-lucide-circle-check" class="absolute top-5 right-3 text-primary" />
                 <p class="font-display font-semibold text-highlighted">
                   {{ f.label }}

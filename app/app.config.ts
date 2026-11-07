@@ -1,8 +1,8 @@
 export default defineAppConfig({
   ui: {
     colors: {
-      primary: 'amber',
-      neutral: 'stone'
+      primary: 'blue',
+      neutral: 'slate'
     },
     dashboardPanel: {
       // The panel body is a scrolling flex column; stop cards/alerts (overflow-hidden)

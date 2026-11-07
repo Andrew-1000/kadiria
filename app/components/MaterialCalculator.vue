@@ -123,10 +123,10 @@ function printReport() {
     </div>
     <UCard v-else :ui="{ root: 'rounded-2xl overflow-hidden', body: 'p-0 sm:p-0', header: 'p-0 sm:p-0' }">
       <template #header>
-        <div class="bg-gradient-to-br from-emerald-950 to-emerald-900 text-white px-6 sm:px-8 pt-6 pb-0 no-print-bg">
+        <div class="bg-gradient-to-br from-blue-950 to-blue-800 text-white px-6 sm:px-8 pt-6 pb-0 no-print-bg">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <p class="text-[11px] font-bold tracking-[0.2em] uppercase text-amber-400">
+              <p class="text-[11px] font-bold tracking-[0.2em] uppercase text-sky-300">
                 — Mafundi Calculator —
               </p>
               <h2 class="mt-2 text-2xl sm:text-3xl font-extrabold">
@@ -137,7 +137,7 @@ function printReport() {
               </p>
             </div>
             <div class="text-right shrink-0">
-              <p class="text-4xl font-extrabold text-amber-400 tabular-nums">
+              <p class="text-4xl font-extrabold text-sky-300 tabular-nums">
                 {{ modules.length }}
               </p>
               <p class="text-[10px] tracking-[0.2em] uppercase text-white/60">
@@ -152,7 +152,7 @@ function printReport() {
                 :key="m.key"
                 type="button"
                 class="flex items-center gap-1.5 px-3 py-3 text-[11px] font-bold tracking-wider uppercase border-b-2 transition whitespace-nowrap"
-                :class="activeKey === m.key ? 'border-amber-400 text-amber-400' : 'border-transparent text-white/60 hover:text-white'"
+                :class="activeKey === m.key ? 'border-sky-300 text-sky-300' : 'border-transparent text-white/60 hover:text-white'"
                 @click="activeKey = m.key"
               >
                 <span class="opacity-60 tabular-nums">{{ String(modules.indexOf(m) + 1).padStart(2, '0') }}</span>
