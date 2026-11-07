@@ -75,6 +75,9 @@ const bills = [
           </p>
         </div>
       </div>
+      <div class="mt-6">
+        <UButton to="/prepare" icon="i-lucide-list-checks" trailing-icon="i-lucide-arrow-right" label="Check which documents you have" />
+      </div>
     </UPageSection>
 
     <UPageSection title="The standard Kenyan BQ layout" description="Drafts follow the bill structure used in Kenyan tender documents. Each item is described, measured (unit × quantity) and priced (rate → amount)." :ui="{ title: 'font-display', container: 'py-10 sm:py-14' }">

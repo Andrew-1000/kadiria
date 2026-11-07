@@ -26,7 +26,7 @@ export const JOURNEY: JourneyStage[] = [
     output: 'An estimated total, a likely range and a budget check'
   },
   {
-    key: 'prepare', no: 2, title: 'Prepare documents', icon: 'i-lucide-drafting-compass', tool: 'BQ checklist', to: '/#prerequisites',
+    key: 'prepare', no: 2, title: 'Prepare documents', icon: 'i-lucide-drafting-compass', tool: 'Document check', to: '/prepare',
     what: 'An architect draws the plans, an engineer designs the structure and services, and approvals are applied for. A Bill of Quantities is measured from these documents.',
     who: 'Architect, structural & MEP engineers, county planning office',
     output: 'Drawings, structural design, specification and approvals'

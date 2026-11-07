@@ -6,7 +6,7 @@ const links = computed(() => [
   ...(config.value?.flags.cost_estimator !== false ? [{ label: 'Cost Calculator', to: '/estimate', icon: 'i-lucide-calculator' }] : []),
   ...(config.value?.flags.material_calculators !== false ? [{ label: 'Material Calculators', to: '/calculators', icon: 'i-lucide-boxes' }] : []),
   ...(config.value?.flags.bq_projects !== false ? [{ label: 'BQ Projects', to: loggedIn.value ? '/projects' : '/login?redirect=/projects', icon: 'i-lucide-file-spreadsheet' }] : []),
-  { label: 'What a BQ needs', to: '/#prerequisites', icon: 'i-lucide-list-checks' }
+  { label: 'What a BQ needs', to: '/prepare', icon: 'i-lucide-list-checks' }
 ])
 </script>
 

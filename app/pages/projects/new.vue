@@ -17,7 +17,10 @@ const steps = [
   { title: 'Review', icon: 'i-lucide-file-check-2' }
 ]
 
-const prereq = reactive<Record<string, PrereqStatus>>(Object.fromEntries(PREREQUISITES.map(p => [p.key, 'missing'])))
+// Start from the answers given on the Prepare documents page (stage 2), and keep them in sync
+const answers = usePrereqAnswers()
+const prereq = reactive<Record<string, PrereqStatus>>(Object.fromEntries(PREREQUISITES.map(p => [p.key, answers.value[p.key] ?? 'missing'])))
+watch(prereq, v => { answers.value = { ...v } }, { deep: true })
 const score = computed(() => readiness(prereq))
 
 const areasFromQuery = String(route.query.areas ?? '').split(',').map(Number).filter(n => n > 0)
