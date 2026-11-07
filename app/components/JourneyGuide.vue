@@ -6,6 +6,10 @@
 const props = withDefaults(defineProps<{ stage: JourneyStage['key'], compact?: boolean, note?: string }>(), { compact: false, note: '' })
 const current = computed(() => journeyStage(props.stage))
 const open = ref(!props.compact)
+// Public pages keep visitors inside the journey; inside the workspace, link to the working pages.
+const route = useRoute()
+const inApp = computed(() => route.meta.layout === 'dashboard')
+const linkFor = (s: JourneyStage) => (inApp.value && s.appTo) || s.to
 </script>
 
 <template>
@@ -13,7 +17,7 @@ const open = ref(!props.compact)
     <ol class="flex overflow-x-auto">
       <li v-for="s in JOURNEY" :key="s.key" class="flex-1 min-w-[7.5rem]">
         <NuxtLink
-          :to="s.to"
+          :to="linkFor(s)"
           class="flex items-center gap-2 px-3 py-2.5 text-xs border-b-2 h-full transition"
           :class="s.key === current.key
             ? 'border-primary text-highlighted font-semibold bg-primary/5'

@@ -2,6 +2,8 @@
 /** "What comes next" card shown at the end of each stage, leading into the following tool. */
 const props = defineProps<{ stage: JourneyStage['key'], to?: string | Record<string, unknown>, label?: string, hint?: string }>()
 const next = computed(() => nextStage(props.stage))
+const route = useRoute()
+const target = computed(() => props.to ?? ((route.meta.layout === 'dashboard' && next.value?.appTo) || next.value?.to))
 </script>
 
 <template>
@@ -15,6 +17,6 @@ const next = computed(() => nextStage(props.stage))
         {{ hint || next.what }}
       </p>
     </div>
-    <UButton :to="to ?? next.to" trailing-icon="i-lucide-arrow-right" :label="label ?? `Go to ${next.tool}`" class="shrink-0" />
+    <UButton :to="target" trailing-icon="i-lucide-arrow-right" :label="label ?? `Go to ${next.tool}`" class="shrink-0" />
   </section>
 </template>

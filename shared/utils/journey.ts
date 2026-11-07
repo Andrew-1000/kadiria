@@ -9,7 +9,10 @@ export interface JourneyStage {
   icon: string
   /** The tool in this system that supports the stage. */
   tool: string
+  /** Page for this stage inside the public journey (same tabbed layout). */
   to: string
+  /** Working page inside the signed-in workspace, used when the banner is shown there. */
+  appTo?: string
   /** What happens at this stage of a real construction project. */
   what: string
   /** Who is usually involved. */
@@ -38,19 +41,19 @@ export const JOURNEY: JourneyStage[] = [
     output: 'Material quantities and costs for each element'
   },
   {
-    key: 'bq', no: 4, title: 'Draft the BQ', icon: 'i-lucide-file-spreadsheet', tool: 'BQ wizard & editor', to: '/projects/new',
+    key: 'bq', no: 4, title: 'Draft the BQ', icon: 'i-lucide-file-spreadsheet', tool: 'BQ wizard & editor', to: '/stage/draft', appTo: '/projects/new',
     what: 'Every piece of work is described, measured and priced in standard bills, from preliminaries to provisional sums, with contingency and VAT on top.',
     who: 'Quantity surveyor',
     output: 'A priced Bill of Quantities'
   },
   {
-    key: 'review', no: 5, title: 'Review & issue', icon: 'i-lucide-stamp', tool: 'BQ review workflow', to: '/projects',
+    key: 'review', no: 5, title: 'Review & issue', icon: 'i-lucide-stamp', tool: 'BQ review workflow', to: '/stage/review', appTo: '/projects',
     what: 'A professional checks the quantities and rates, approves the BQ and issues it as a fixed, numbered revision that everyone prices against.',
     who: 'Senior QS / project manager',
     output: 'An issued BQ revision (locked)'
   },
   {
-    key: 'build', no: 6, title: 'Tender & build', icon: 'i-lucide-hard-hat', tool: 'Print, PDF & CSV export', to: '/projects',
+    key: 'build', no: 6, title: 'Tender & build', icon: 'i-lucide-hard-hat', tool: 'Print, PDF & CSV export', to: '/stage/tender', appTo: '/projects',
     what: 'Contractors price the issued BQ to tender. During construction it guides purchasing, interim valuations and payments, and any changes become a new revision.',
     who: 'Contractors, client, QS on site',
     output: 'A contract sum and a cost-control baseline'
