@@ -51,6 +51,9 @@ const rows = computed(() => {
           </template>
         </div>
       </div>
+      <p v-if="bill.description" class="text-xs text-muted mt-1">
+        {{ bill.description }}
+      </p>
       <p v-if="bill.notes" class="text-xs text-warning mt-1">
         {{ bill.notes }}
       </p>

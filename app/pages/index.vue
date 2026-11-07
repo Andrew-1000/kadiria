@@ -5,12 +5,6 @@ const { data: config } = await useBqConfig()
 const { loggedIn } = useUserSession()
 useSeoMeta({ title: 'Davecore BQ: construction cost, materials & Bills of Quantities' })
 
-const steps = [
-  { icon: 'i-lucide-calculator', title: '1. Ballpark the cost', text: 'Pick your town, house type, floor area and finish. The cost calculator uses current cost-per-m² bands to tell you whether your plan fits your budget.' },
-  { icon: 'i-lucide-boxes', title: '2. Quantify materials', text: 'Element calculators (blinding, footings, columns, slabs, walling, plaster...) give cement bags, sand, ballast, steel and stones, priced for your location.' },
-  { icon: 'i-lucide-file-spreadsheet', title: '3. Draft the BQ', text: 'The BQ wizard checks what documents you have, then drafts the standard bills, from Preliminaries to Provisional Sums, ready for a professional to refine, approve and issue.' }
-]
-
 const bills = [
   ['1', 'Preliminaries & General Items'], ['2', 'Substructure'], ['3', 'Superstructure'], ['4', 'Roofing'], ['5', 'Doors & Windows'],
   ['6', 'Finishes'], ['7', 'Services'], ['8', 'External Works'], ['9', 'Provisional & Prime Cost Sums'], ['Σ', 'Grand Summary: contingency + 16% VAT']
@@ -29,13 +23,41 @@ const bills = [
       :ui="{ title: 'font-display', container: 'py-16 sm:py-24' }"
     />
 
-    <UPageSection title="Three steps from idea to Bill of Quantities" :ui="{ title: 'font-display', container: 'py-10 sm:py-14' }">
-      <div class="grid md:grid-cols-3 gap-4">
-        <UPageCard v-for="s in steps" :key="s.title" :icon="s.icon" :title="s.title" :description="s.text" spotlight />
-      </div>
+    <UPageSection
+      id="journey"
+      title="From idea to building: the construction journey"
+      description="Every tool here belongs to a stage of a real building project. Start where you are; each stage tells you what it is, who is involved and what comes next."
+      :ui="{ title: 'font-display', container: 'py-10 sm:py-14' }"
+    >
+      <ol class="relative grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <li v-for="s in JOURNEY" :key="s.key">
+          <NuxtLink :to="s.to" class="group flex h-full flex-col rounded-xl border border-default p-5 transition hover:border-primary/60 hover:bg-elevated/40">
+            <div class="flex items-center gap-3">
+              <span class="size-9 rounded-full bg-primary text-inverted grid place-items-center font-bold">{{ s.no }}</span>
+              <div>
+                <p class="font-display font-semibold text-highlighted">
+                  {{ s.title }}
+                </p>
+                <p class="text-xs text-muted">
+                  <UIcon :name="s.icon" class="align-[-2px]" /> {{ s.tool }}
+                </p>
+              </div>
+            </div>
+            <p class="mt-3 text-sm text-muted flex-1">
+              {{ s.what }}
+            </p>
+            <p class="mt-3 text-xs text-dimmed">
+              <b>Who:</b> {{ s.who }}<br><b>You get:</b> {{ s.output }}
+            </p>
+            <span class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+              Open {{ s.tool.toLowerCase() }} <UIcon name="i-lucide-arrow-right" class="transition group-hover:translate-x-1" />
+            </span>
+          </NuxtLink>
+        </li>
+      </ol>
     </UPageSection>
 
-    <UPageSection id="prerequisites" title="What you need for a successful BQ" description="A Bill of Quantities is only as good as the information it is measured from. Here is what a quantity surveyor asks for, and what this system does when something is missing." :ui="{ title: 'font-display', container: 'py-10 sm:py-14' }">
+    <UPageSection id="prerequisites" title="Stage 2 · What you need for a successful BQ" description="A Bill of Quantities is only as good as the documents it is measured from. These are what a quantity surveyor asks for, and what this system does when something is missing." :ui="{ title: 'font-display', container: 'py-10 sm:py-14' }">
       <div class="grid lg:grid-cols-2 gap-4">
         <div v-for="p in PREREQUISITES" :key="p.key" class="rounded-xl border border-default p-5">
           <div class="flex items-center gap-2">

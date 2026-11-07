@@ -6,6 +6,7 @@ interface Ev { id: string, actorName: string | null, action: string, details: Re
 const { data: events } = await useFetch<Ev[]>('/api/admin/audit', { default: () => [], server: false })
 const search = ref('')
 const shown = computed(() => events.value.filter(e => !search.value || `${e.action} ${e.actorName} ${JSON.stringify(e.details)}`.toLowerCase().includes(search.value.toLowerCase())))
+const { rows: pagedEvents, page, pageSize, total, from, to } = usePaged(shown, 'admin:audit', 25)
 </script>
 
 <template>
@@ -27,7 +28,7 @@ const shown = computed(() => events.value.filter(e => !search.value || `${e.acti
               </tr>
             </thead>
             <tbody>
-              <tr v-for="e in shown" :key="e.id">
+              <tr v-for="e in pagedEvents" :key="e.id">
                 <td class="whitespace-nowrap text-muted">
                   {{ new Date(e.at).toLocaleString('en-KE') }}
                 </td>
@@ -45,6 +46,7 @@ const shown = computed(() => events.value.filter(e => !search.value || `${e.acti
             </tbody>
           </table>
         </div>
+        <TablePager v-model:page="page" v-model:page-size="pageSize" :total="total" :from="from" :to="to" noun="events" />
       </UCard>
     </template>
   </UDashboardPanel>

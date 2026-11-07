@@ -5,6 +5,7 @@ useSeoMeta({ title: 'Users | Admin' })
 interface U { id: string, email: string, name: string, role: 'admin' | 'professional' | 'member', organisation: string, active: boolean, lastLoginAt: string | null }
 const { data: users, refresh } = await useFetch<U[]>('/api/admin/users', { default: () => [], server: false })
 const { call, toast } = useApi()
+const { rows: pagedUsers, page, pageSize, total, from, to } = usePaged(users, 'admin:users')
 const roles = [
   { label: 'Administrator', value: 'admin', description: 'Back-office, all projects, approve & issue' },
   { label: 'Professional (QS / engineer)', value: 'professional', description: 'Own projects, approve & issue BQs' },
@@ -58,7 +59,7 @@ async function save() {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="u in users" :key="u.id">
+              <tr v-for="u in pagedUsers" :key="u.id">
                 <td class="font-medium">
                   {{ u.name }}
                 </td>
@@ -78,6 +79,7 @@ async function save() {
             </tbody>
           </table>
         </div>
+        <TablePager v-model:page="page" v-model:page-size="pageSize" :total="total" :from="from" :to="to" noun="users" />
       </UCard>
 
       <UModal v-model:open="open" :title="editing ? `Edit ${editing.name}` : 'Add user'">

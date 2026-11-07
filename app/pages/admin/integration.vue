@@ -17,6 +17,7 @@ async function saveOrigins() {
   await refresh()
 }
 
+const { rows: pagedKeys, page, pageSize, total, from, to } = usePaged(() => data.value?.keys ?? [], 'admin:api-keys')
 const keyName = ref('Davecore website')
 const newKey = ref<string | null>(null)
 async function createKey() {
@@ -94,7 +95,7 @@ PUT  ${base.value}/api/integration/features/module:blinding     {"enabled": true
             </template>
           </UAlert>
           <ul class="mt-4 divide-y divide-default text-sm">
-            <li v-for="k in data?.keys ?? []" :key="k.id" class="py-2 flex items-center justify-between gap-2">
+            <li v-for="k in pagedKeys" :key="k.id" class="py-2 flex items-center justify-between gap-2">
               <span>
                 <b>{{ k.name }}</b> <code class="text-xs text-muted">{{ k.prefix }}…</code><br>
                 <span class="text-xs text-muted">Created {{ new Date(k.createdAt).toLocaleDateString('en-KE') }} · {{ k.lastUsedAt ? `last used ${new Date(k.lastUsedAt).toLocaleString('en-KE')}` : 'never used' }}</span>
@@ -103,6 +104,7 @@ PUT  ${base.value}/api/integration/features/module:blinding     {"enabled": true
               <UButton v-else size="xs" color="error" variant="outline" label="Revoke" @click="revoke(k)" />
             </li>
           </ul>
+          <TablePager v-model:page="page" v-model:page-size="pageSize" :total="total" :from="from" :to="to" noun="keys" class="-mx-4 sm:-mx-6 -mb-4 sm:-mb-6 mt-2" />
         </UCard>
       </div>
 

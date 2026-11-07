@@ -12,7 +12,7 @@ export interface PublicConfig {
   elements: { key: string, label: string, percent: number, sort: number }[]
   mixes: { key: string, name: string, kind: 'concrete' | 'mortar', cement: number, sand: number, ballast: number }[]
   constants: Record<string, number>
-  modules: { key: string, name: string, short: string, description: string, billKey: string, icon: string, formula: string[], inputs: InputDef[], enabled: boolean, sort: number }[]
+  modules: { key: string, name: string, short: string, description: string, billKey: string, icon: string, formula: string[], stage: string, onSite: string, sequence: number, inputs: InputDef[], enabled: boolean, sort: number }[]
 }
 
 /** Shared, cached public configuration (rates, locations, modules...). */

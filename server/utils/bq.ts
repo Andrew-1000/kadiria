@@ -19,14 +19,16 @@ export async function loadProject(id: string, user: SessionUser, opts: { editabl
 
 export async function projectDetail(project: ProjectRow) {
   const db = useDb()
-  const [bills, items, location, docs] = await Promise.all([
+  const [bills, items, location, docs, templates] = await Promise.all([
     db.select().from(t.projectBills).where(eq(t.projectBills.projectId, project.id)).orderBy(asc(t.projectBills.sort), asc(t.projectBills.number)),
     db.select().from(t.projectItems).where(eq(t.projectItems.projectId, project.id)).orderBy(asc(t.projectItems.sort), asc(t.projectItems.createdAt)),
     project.locationId ? db.select().from(t.locations).where(eq(t.locations.id, project.locationId)).then(r => r[0] ?? null) : Promise.resolve(null),
     db.select({ id: t.issuedDocuments.id, revision: t.issuedDocuments.revision, issuedAt: t.issuedDocuments.issuedAt, grandTotal: t.issuedDocuments.grandTotal, projectId: t.issuedDocuments.projectId })
-      .from(t.issuedDocuments).where(eq(t.issuedDocuments.lineageId, project.lineageId)).orderBy(asc(t.issuedDocuments.revision))
+      .from(t.issuedDocuments).where(eq(t.issuedDocuments.lineageId, project.lineageId)).orderBy(asc(t.issuedDocuments.revision)),
+    db.select({ key: t.billTemplates.key, description: t.billTemplates.description }).from(t.billTemplates)
   ])
-  const billsWithItems = bills.map(b => ({ ...b, items: items.filter(i => i.billId === b.id) }))
+  const describe = new Map(templates.map(tpl => [tpl.key, tpl.description]))
+  const billsWithItems = bills.map(b => ({ ...b, description: (b.templateKey && describe.get(b.templateKey)) || '', items: items.filter(i => i.billId === b.id) }))
   const summary = bqSummary(billsWithItems, project.contingencyPercent, project.vatPercent)
   return { ...project, location, bills: billsWithItems, summary, readiness: readiness(project.prerequisites), documents: docs }
 }

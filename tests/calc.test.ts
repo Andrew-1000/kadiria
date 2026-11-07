@@ -101,3 +101,25 @@ describe('BQ', () => {
     expect(readiness({}).level).toBe('Order-of-cost estimate')
   })
 })
+
+describe('construction sequence', () => {
+  it('lists the elements in site order, each with its stage and on-site explanation', async () => {
+    const { MODULES } = await import('../shared/calc/modules')
+    expect(MODULES.map(m => m.key)).toEqual([
+      'excavation', 'blinding', 'strip_footing', 'column_bases', 'foundation_walling', 'hardcore',
+      'ground_slab', 'columns', 'walling', 'beams', 'suspended_slab', 'plaster'
+    ])
+    for (const m of MODULES) {
+      expect(m.stage).toBeTruthy()
+      expect((m.onSite ?? '').length).toBeGreaterThan(40)
+    }
+  })
+  it('journey stages are numbered 1..6 and each links to a tool', async () => {
+    const { JOURNEY, nextStage, stageForStatus } = await import('../shared/utils/journey')
+    expect(JOURNEY.map(s => s.no)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(nextStage('plan')?.key).toBe('prepare')
+    expect(nextStage('build')).toBeNull()
+    expect(stageForStatus('submitted')).toBe('review')
+    expect(stageForStatus('issued')).toBe('build')
+  })
+})

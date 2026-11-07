@@ -21,6 +21,8 @@ const items = computed(() => (data.value?.items ?? []).filter(i =>
   (filterBill.value === 'all' || i.billKey === filterBill.value)
   && (!search.value || `${i.code} ${i.description} ${i.section}`.toLowerCase().includes(search.value.toLowerCase()))))
 
+const { rows: pagedItems, page, pageSize, total, from, to } = usePaged(items, 'bq:library-picker', 25)
+
 function toggle(code: string) {
   selected.value = selected.value.includes(code) ? selected.value.filter(c => c !== code) : [...selected.value, code]
 }
@@ -45,8 +47,8 @@ async function add() {
         <USelect v-model="filterBill" :items="[{ label: 'All bills', value: 'all' }, ...(data?.bills ?? []).map(b => ({ label: b.title, value: b.key }))]" class="sm:w-64" />
         <UInput v-model="search" icon="i-lucide-search" placeholder="Search items" class="flex-1" />
       </div>
-      <div class="max-h-[55vh] overflow-y-auto divide-y divide-default rounded-lg border border-default">
-        <label v-for="i in items" :key="i.code" class="flex gap-3 px-3 py-2.5 cursor-pointer hover:bg-elevated/50">
+      <div class="divide-y divide-default rounded-lg border border-default">
+        <label v-for="i in pagedItems" :key="i.code" class="flex gap-3 px-3 py-2.5 cursor-pointer hover:bg-elevated/50">
           <UCheckbox :model-value="selected.includes(i.code)" @update:model-value="toggle(i.code)" />
           <span class="flex-1 text-sm">
             <span class="text-xs text-muted">{{ i.code }} · {{ i.section }}</span><br>
@@ -58,6 +60,10 @@ async function add() {
           No matching items.
         </p>
       </div>
+      <TablePager v-model:page="page" v-model:page-size="pageSize" :total="total" :from="from" :to="to" noun="items" :sizes="[25, 50, 100]" />
+      <p v-if="selected.length" class="mt-2 text-xs text-muted">
+        Selections are kept when you change page or filter.
+      </p>
     </template>
     <template #footer>
       <div class="flex justify-between items-center w-full">

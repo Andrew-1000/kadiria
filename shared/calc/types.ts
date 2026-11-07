@@ -75,6 +75,10 @@ export interface ModuleDef {
   description: string
   billKey: string
   icon: string
+  /** Construction stage (Foundations, Superstructure, Finishes). */
+  stage?: string
+  /** What happens on site at this point in the construction sequence. */
+  onSite?: string
   formula: string[]
   inputs: InputDef[]
   compute: (inputs: ModuleInputs, ctx: ModuleContext) => ModuleResult
@@ -84,4 +88,6 @@ export interface PricedMaterial extends MaterialQty {
   unitPrice: number | null
   amount: number | null
   priceSource: 'location' | 'national' | 'override' | 'missing'
+  /** Date the applied admin price took effect (null for overrides or missing prices). */
+  effectiveFrom?: string | null
 }

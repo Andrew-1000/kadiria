@@ -22,6 +22,7 @@ async function openPrices(row: Record<string, unknown>) {
   priceMaterial.value = row as unknown as Material
   Object.assign(priceForm, { locationId: 0, price: current.value[String(row.key)]?.price ?? 0, effectiveFrom: new Date().toISOString().slice(0, 10), source: '' })
   history.value = await call(`/api/admin/material-prices?materialId=${row.id}`)
+  page.value = 1
   priceOpen.value = true
 }
 async function savePrice() {
@@ -32,6 +33,7 @@ async function savePrice() {
   await refreshCurrent()
 }
 const refreshConfig = () => refreshNuxtData('bq-config')
+const { rows: pagedHistory, page, pageSize, total, from, to } = usePaged(history, 'admin:price-history')
 </script>
 
 <template>
@@ -112,7 +114,7 @@ const refreshConfig = () => refreshNuxtData('bq-config')
               <UButton type="submit" icon="i-lucide-plus" label="Record price" />
             </div>
           </form>
-          <div class="mt-5 max-h-64 overflow-y-auto rounded-lg border border-default">
+          <div class="mt-5 rounded-lg border border-default">
             <table class="bq-table">
               <thead>
                 <tr>
@@ -122,7 +124,7 @@ const refreshConfig = () => refreshNuxtData('bq-config')
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="h in history" :key="h.id">
+                <tr v-for="h in pagedHistory" :key="h.id">
                   <td>{{ h.locationName ?? 'National' }}</td>
                   <td class="num">
                     {{ formatNumber(h.price, 2) }}
@@ -134,6 +136,7 @@ const refreshConfig = () => refreshNuxtData('bq-config')
                 </tr>
               </tbody>
             </table>
+            <TablePager v-model:page="page" v-model:page-size="pageSize" :total="total" :from="from" :to="to" noun="prices" />
           </div>
         </template>
       </UModal>

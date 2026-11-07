@@ -19,6 +19,8 @@ export interface BqBill {
   templateKey: string | null
   number: number
   title: string
+  /** What this bill covers in the construction process (from the standard bill template). */
+  description?: string
   notes: string
   provisional: boolean
   sort: number

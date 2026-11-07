@@ -37,6 +37,7 @@ async function saveRate() {
   refreshNuxtData('bq-config')
 }
 
+const { rows: pagedHistory, page, pageSize, total, from, to } = usePaged(() => rates.value?.history ?? [], 'admin:rate-history')
 const tierLabel = (id: number) => tiers.value.find(t => t.id === id)?.label ?? id
 const finishLabel = (k: string) => finishes.value.find(f => f.key === k)?.label ?? k
 const refreshConfig = () => refreshNuxtData('bq-config')
@@ -95,7 +96,7 @@ const refreshConfig = () => refreshNuxtData('bq-config')
               Rate history
             </h3>
           </template>
-          <div class="overflow-x-auto max-h-96">
+          <div class="overflow-x-auto">
             <table class="bq-table">
               <thead>
                 <tr>
@@ -107,7 +108,7 @@ const refreshConfig = () => refreshNuxtData('bq-config')
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="r in rates?.history ?? []" :key="r.id">
+                <tr v-for="r in pagedHistory" :key="r.id">
                   <td>{{ tierLabel(r.tierId) }}</td><td>{{ finishLabel(r.finishKey) }}</td>
                   <td class="num">
                     {{ formatNumber(r.minRate, 0) }}
@@ -123,6 +124,7 @@ const refreshConfig = () => refreshNuxtData('bq-config')
               </tbody>
             </table>
           </div>
+          <TablePager v-model:page="page" v-model:page-size="pageSize" :total="total" :from="from" :to="to" noun="rate records" />
         </UCard>
       </template>
 

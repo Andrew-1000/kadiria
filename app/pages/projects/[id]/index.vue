@@ -12,6 +12,17 @@ const { call, toast } = useApi()
 useSeoMeta({ title: () => `${project.value?.name ?? 'BQ'} | Davecore BQ` })
 
 const editable = computed(() => project.value?.status === 'draft')
+const { rows: pagedDocs, page: docPage, pageSize: docPageSize, total: docTotal, from: docFrom, to: docTo } = usePaged(() => project.value?.documents ?? [], 'project:revisions')
+const journey = computed(() => {
+  const s = project.value?.status ?? 'draft'
+  const notes: Record<string, string> = {
+    draft: 'Measure and price every bill. Use the calculators tab for element quantities, then submit the BQ for review.',
+    submitted: 'Waiting for a professional to check quantities and rates. They can approve it or return it to draft with comments.',
+    approved: 'Approved. Issue it to lock this revision so contractors can price against it.',
+    issued: 'Issued and locked. Print or export it for tendering; any change on site becomes a new revision.'
+  }
+  return { stage: stageForStatus(s), note: notes[s] ?? '' }
+})
 const reviewer = computed(() => user.value?.role === 'admin' || user.value?.role === 'professional')
 const tab = ref('bills')
 const tabs = [
@@ -193,6 +204,8 @@ const nonEmptyBills = computed(() => project.value?.bills.filter(b => b.items.le
           </UCard>
         </div>
 
+        <JourneyGuide :stage="journey.stage" compact :note="journey.note" />
+
         <UAlert v-if="!editable" color="info" variant="subtle" icon="i-lucide-lock" :title="project.status === 'issued' ? 'This revision is issued and locked. Create a revision to make changes.' : 'This BQ is in review and locked. Return it to draft to edit.'" />
 
         <UTabs v-model="tab" :items="tabs" variant="link" :content="false" class="w-full" />
@@ -363,7 +376,7 @@ const nonEmptyBills = computed(() => project.value?.bills.filter(b => b.items.le
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="d in project.documents" :key="d.id">
+                <tr v-for="d in pagedDocs" :key="d.id">
                   <td>Rev {{ d.revision }}</td>
                   <td>{{ new Date(d.issuedAt).toLocaleString('en-KE') }}</td>
                   <td class="num">
@@ -380,6 +393,7 @@ const nonEmptyBills = computed(() => project.value?.bills.filter(b => b.items.le
                 </tr>
               </tbody>
             </table>
+            <TablePager v-model:page="docPage" v-model:page-size="docPageSize" :total="docTotal" :from="docFrom" :to="docTo" noun="revisions" />
           </UCard>
         </div>
 

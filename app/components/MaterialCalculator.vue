@@ -28,6 +28,9 @@ const { loggedIn } = useUserSession()
 const modules = computed(() => config.value?.modules ?? [])
 const activeKey = ref(props.initialModule && modules.value.some(m => m.key === props.initialModule) ? props.initialModule : modules.value[0]?.key ?? '')
 const active = computed(() => modules.value.find(m => m.key === activeKey.value))
+const activeIndex = computed(() => modules.value.findIndex(m => m.key === activeKey.value))
+const prevModule = computed(() => activeIndex.value > 0 ? modules.value[activeIndex.value - 1] : undefined)
+const nextModule = computed(() => activeIndex.value >= 0 ? modules.value[activeIndex.value + 1] : undefined)
 
 // Global settings (shared by all modules)
 const settings = reactive({
@@ -152,6 +155,7 @@ function printReport() {
                 :class="activeKey === m.key ? 'border-amber-400 text-amber-400' : 'border-transparent text-white/60 hover:text-white'"
                 @click="activeKey = m.key"
               >
+                <span class="opacity-60 tabular-nums">{{ String(modules.indexOf(m) + 1).padStart(2, '0') }}</span>
                 <UIcon :name="m.icon" class="size-4" /> {{ m.short }}
               </button>
             </div>
@@ -201,6 +205,29 @@ function printReport() {
                 {{ active.description }}
               </p>
             </div>
+          </div>
+
+          <!-- Where this element sits in the construction sequence -->
+          <div v-if="active.onSite" class="rounded-lg border border-default bg-elevated/40 p-4 no-print">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <p class="text-xs font-semibold uppercase tracking-wider text-muted">
+                <UIcon name="i-lucide-hard-hat" class="align-[-2px] text-primary" />
+                On site · step {{ activeIndex + 1 }} of {{ modules.length }} · {{ active.stage }}
+              </p>
+              <div class="flex gap-1">
+                <UButton v-if="prevModule" size="xs" color="neutral" variant="ghost" icon="i-lucide-arrow-left" :label="prevModule.short" @click="activeKey = prevModule.key" />
+                <UButton v-if="nextModule" size="xs" color="neutral" variant="outline" trailing-icon="i-lucide-arrow-right" :label="`Next: ${nextModule.short}`" @click="activeKey = nextModule.key" />
+              </div>
+            </div>
+            <p class="mt-2 text-sm">
+              {{ active.onSite }}
+            </p>
+            <p v-if="nextModule" class="mt-1 text-xs text-muted">
+              Then: {{ nextModule.name.toLowerCase() }}.
+            </p>
+            <p v-else class="mt-1 text-xs text-muted">
+              This is the last element here. Roofing, doors, windows and services are priced in the full BQ.
+            </p>
           </div>
 
           <div class="formula-block">

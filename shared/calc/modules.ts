@@ -24,7 +24,7 @@ function requirePositive(warnings: string[], values: Record<string, number>) {
   for (const [label, v] of Object.entries(values)) if (!(v > 0)) warnings.push(`${label} must be greater than zero.`)
 }
 
-export const MODULES: ModuleDef[] = [
+const DEFINITIONS: ModuleDef[] = [
   {
     key: 'excavation',
     name: 'Excavation',
@@ -550,6 +550,31 @@ function walling(i: Parameters<ModuleDef['compute']>[0], ctx: Parameters<ModuleD
   else bq.push({ billKey, section, description: '20 gauge × 32 mm hoop iron walling reinforcement in alternate courses', unit: 'm', quantity: hoop, libraryCode: 'SUP-510' })
   return result(lines, list, ctx, bq, w)
 }
+
+/**
+ * Elements in the order they are built on site, with where each one sits in the construction
+ * process. Users step through them one after another ("next on site").
+ */
+const SITE_SEQUENCE: { key: string, stage: string, onSite: string }[] = [
+  { key: 'excavation', stage: 'Foundations', onSite: 'After the building is set out on the ground, trenches are dug to foundation depth. Surplus soil is carted away; good soil is kept for backfilling.' },
+  { key: 'blinding', stage: 'Foundations', onSite: 'A thin layer of lean concrete is poured at the bottom of the trench so footings sit on a clean, level base and the steel keeps its concrete cover.' },
+  { key: 'strip_footing', stage: 'Foundations', onSite: 'A reinforced concrete strip is cast on the blinding under every load-bearing wall. It spreads the weight of the building into the ground.' },
+  { key: 'column_bases', stage: 'Foundations', onSite: 'Where the structure has columns, a reinforced pad is cast under each one, usually at the same time as the strip footings.' },
+  { key: 'foundation_walling', stage: 'Foundations', onSite: 'Stone walling is built up from the footing to damp-proof-course (DPC) level and capped with a DPC to stop rising damp.' },
+  { key: 'hardcore', stage: 'Foundations', onSite: 'Inside the foundation walls the ground is filled with compacted hardcore and blinded with murram or sand, ready to carry the floor slab.' },
+  { key: 'ground_slab', stage: 'Foundations', onSite: 'Anti-termite treatment, a polythene DPM and mesh are laid and the ground floor slab is cast. This completes the substructure.' },
+  { key: 'columns', stage: 'Superstructure', onSite: 'The frame begins: column steel is fixed, boxed in formwork and concreted, one storey at a time.' },
+  { key: 'walling', stage: 'Superstructure', onSite: 'Walls are built from slab level between the columns, with hoop iron in alternate courses and openings left for doors and windows.' },
+  { key: 'beams', stage: 'Superstructure', onSite: 'Ring beams and lintels are cast over the walls and openings to tie the structure together and carry the floor or roof above.' },
+  { key: 'suspended_slab', stage: 'Superstructure', onSite: 'For storeyed buildings the upper floor slab is cast on propped formwork; the columns-walls-beams cycle then repeats for the next floor.' },
+  { key: 'plaster', stage: 'Finishes', onSite: 'After roofing, first-fix services and door/window frames, walls are plastered inside and rendered outside, ready for painting.' }
+]
+
+export const MODULES: ModuleDef[] = SITE_SEQUENCE.map((s) => {
+  const def = DEFINITIONS.find(d => d.key === s.key)
+  if (!def) throw new Error(`Unknown module in site sequence: ${s.key}`)
+  return { ...def, stage: s.stage, onSite: s.onSite }
+})
 
 export const MODULE_MAP = Object.fromEntries(MODULES.map(m => [m.key, m])) as Record<string, ModuleDef>
 

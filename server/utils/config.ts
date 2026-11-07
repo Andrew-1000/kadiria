@@ -42,6 +42,7 @@ export async function getModules(includeDisabled = false) {
     const defaults = cfg?.defaults ?? {}
     return {
       key: m.key, name: m.name, short: m.short, description: m.description, billKey: m.billKey, icon: m.icon, formula: m.formula,
+      stage: m.stage ?? '', onSite: m.onSite ?? '', sequence: index + 1,
       inputs: m.inputs.map(i => ({ ...i, default: defaults[i.key] ?? i.default })),
       enabled: cfg?.enabled ?? true,
       sort: cfg?.sort ?? index
@@ -76,7 +77,7 @@ export async function getPublicConfig() {
 export async function getMaterialPrices(locationId: number | null, keys?: string[]) {
   const db = useDb()
   const mats = await db.select().from(t.materials).where(keys?.length ? inArray(t.materials.key, keys) : eq(t.materials.active, true))
-  if (!mats.length) return new Map<string, { price: number, source: 'location' | 'national', materialId: number, name: string, unit: string }>()
+  if (!mats.length) return new Map<string, { price: number, source: 'location' | 'national', materialId: number, name: string, unit: string, effectiveFrom: string }>()
   const prices = await db.selectDistinctOn([t.materialPrices.materialId, t.materialPrices.locationId])
     .from(t.materialPrices)
     .where(and(
@@ -85,12 +86,12 @@ export async function getMaterialPrices(locationId: number | null, keys?: string
       locationId ? or(isNull(t.materialPrices.locationId), eq(t.materialPrices.locationId, locationId)) : isNull(t.materialPrices.locationId)
     ))
     .orderBy(t.materialPrices.materialId, t.materialPrices.locationId, desc(t.materialPrices.effectiveFrom), desc(t.materialPrices.recordedAt))
-  const out = new Map<string, { price: number, source: 'location' | 'national', materialId: number, name: string, unit: string }>()
+  const out = new Map<string, { price: number, source: 'location' | 'national', materialId: number, name: string, unit: string, effectiveFrom: string }>()
   for (const m of mats) {
     const local = prices.find(p => p.materialId === m.id && p.locationId === locationId && locationId !== null)
     const national = prices.find(p => p.materialId === m.id && p.locationId === null)
     const chosen = local ?? national
-    if (chosen) out.set(m.key, { price: chosen.price, source: local ? 'location' : 'national', materialId: m.id, name: m.name, unit: m.unit })
+    if (chosen) out.set(m.key, { price: chosen.price, source: local ? 'location' : 'national', materialId: m.id, name: m.name, unit: m.unit, effectiveFrom: chosen.effectiveFrom })
   }
   return out
 }
@@ -106,7 +107,7 @@ export async function priceMaterials(materials: MaterialQty[], locationId: numbe
     const amount = unitPrice === null ? null : Math.round(unitPrice * m.quantity * 100) / 100
     if (amount === null) missing++
     else total += amount
-    return { ...m, unitPrice, amount, priceSource: override !== undefined && override > 0 ? 'override' : found ? found.source : 'missing' }
+    return { ...m, unitPrice, amount, priceSource: override !== undefined && override > 0 ? 'override' : found ? found.source : 'missing', effectiveFrom: override !== undefined && override > 0 ? null : found?.effectiveFrom ?? null }
   })
   return { items, total: Math.round(total * 100) / 100, missing }
 }

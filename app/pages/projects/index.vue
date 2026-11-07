@@ -10,6 +10,7 @@ const filtered = computed(() => {
   const q = search.value.toLowerCase().trim()
   return (projects.value ?? []).filter(p => !q || `${p.name} ${p.client} ${p.locationName ?? ''}`.toLowerCase().includes(q))
 })
+const { rows: pagedProjects, page, pageSize, total, from, to } = usePaged(filtered, 'projects:list', 12)
 const counts = computed(() => ({
   all: projects.value?.length ?? 0,
   draft: projects.value?.filter(p => p.status === 'draft').length ?? 0,
@@ -28,6 +29,7 @@ const counts = computed(() => ({
       </UDashboardNavbar>
     </template>
     <template #body>
+      <JourneyGuide stage="bq" compact note="Each project moves from draft (stage 4) to review (stage 5) to issued (stage 6). The badge on each card shows where it is." />
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <UCard v-for="s in [
           { label: 'All projects', value: counts.all, icon: 'i-lucide-folder' },
@@ -66,7 +68,7 @@ const counts = computed(() => ({
       </div>
 
       <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-        <NuxtLink v-for="p in filtered" :key="p.id" :to="`/projects/${p.id}`" class="block group">
+        <NuxtLink v-for="p in pagedProjects" :key="p.id" :to="`/projects/${p.id}`" class="block group">
           <UCard class="h-full transition group-hover:ring-primary/50" :ui="{ body: 'p-5 sm:p-5 space-y-3' }">
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
@@ -88,6 +90,9 @@ const counts = computed(() => ({
             </div>
           </UCard>
         </NuxtLink>
+      </div>
+      <div class="rounded-xl border border-default overflow-hidden empty:hidden">
+        <TablePager v-model:page="page" v-model:page-size="pageSize" :total="total" :from="from" :to="to" noun="projects" :sizes="[12, 24, 48, 96]" class="border-t-0" />
       </div>
     </template>
   </UDashboardPanel>

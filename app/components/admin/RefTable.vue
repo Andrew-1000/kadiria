@@ -34,8 +34,15 @@ const emit = defineEmits<{ changed: [] }>()
 const { call, toast } = useApi()
 
 const { data: rows, refresh, status } = await useFetch<Record<string, unknown>[]>(`/api/admin/ref/${props.name}`, { default: () => [], server: false })
-const shown = computed(() => props.filter ? rows.value.filter(props.filter) : rows.value)
+const search = ref('')
+const shown = computed(() => {
+  const base = props.filter ? rows.value.filter(props.filter) : rows.value
+  const q = search.value.trim().toLowerCase()
+  if (!q) return base
+  return base.filter(r => props.columns.some(c => String(r[c.key] ?? '').toLowerCase().includes(q)))
+})
 const tableColumns = computed(() => props.columns.filter(c => !c.formOnly))
+const { rows: pageRows, page, pageSize, total, from, to } = usePaged(shown, `ref:${props.name}`)
 
 const open = ref(false)
 const editing = ref<Record<string, unknown> | null>(null)
@@ -132,6 +139,7 @@ defineExpose({ refresh, rows })
           </p>
         </div>
         <div class="flex gap-2">
+          <UInput v-if="rows.length > 10" v-model="search" size="sm" icon="i-lucide-search" placeholder="Search" class="w-40" :aria-label="`Search ${title}`" />
           <slot name="actions" />
           <UButton v-if="canCreate" size="sm" icon="i-lucide-plus" label="Add" @click="startCreate" />
         </div>
@@ -149,7 +157,7 @@ defineExpose({ refresh, rows })
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in shown" :key="String(row[pk])">
+          <tr v-for="row in pageRows" :key="String(row[pk])">
             <td v-for="c in tableColumns" :key="c.key" :class="c.type === 'number' ? 'num' : ''">
               <USwitch v-if="c.type === 'boolean' && c.inline" :model-value="Boolean(row[c.key])" :loading="toggling.has(`${String(row[pk])}:${c.key}`)" size="sm" :aria-label="c.label" @update:model-value="(v: boolean) => toggle(row, c.key, v)" />
               <UIcon v-else-if="c.type === 'boolean'" :name="row[c.key] ? 'i-lucide-check' : 'i-lucide-minus'" :class="row[c.key] ? 'text-success' : 'text-dimmed'" />
@@ -169,6 +177,8 @@ defineExpose({ refresh, rows })
         </tbody>
       </table>
     </div>
+    <TablePager v-model:page="page" v-model:page-size="pageSize" :total="total" :from="from" :to="to" />
+
 
     <UModal v-model:open="open" :title="`${editing ? 'Edit' : 'Add'}: ${title}`" :ui="{ content: 'sm:max-w-2xl' }">
       <template #body>

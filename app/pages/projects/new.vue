@@ -89,6 +89,7 @@ async function create() {
     </template>
     <template #body>
       <div v-if="config" class="max-w-3xl w-full mx-auto space-y-6">
+        <JourneyGuide stage="bq" compact note="The wizard starts by checking the stage 2 documents you have. Whatever is missing becomes a provisional sum or a written assumption, not a hidden guess." />
         <!-- Stepper -->
         <ol class="grid grid-cols-4 gap-2">
           <li v-for="(s, i) in steps" :key="s.title">

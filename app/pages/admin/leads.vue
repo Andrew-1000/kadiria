@@ -11,6 +11,8 @@ const { call } = useApi()
 const statuses = [
   { label: 'New', value: 'new' }, { label: 'Contacted', value: 'contacted' }, { label: 'Quoted', value: 'quoted' }, { label: 'Closed', value: 'closed' }
 ]
+const { rows: pagedLeads, page, pageSize, total, from, to } = usePaged(leads, 'admin:leads', 10)
+
 async function setStatus(l: Lead, status: string) {
   await call(`/api/admin/leads/${l.id}`, { method: 'PUT', body: { status } })
   await refresh()
@@ -25,12 +27,13 @@ async function setStatus(l: Lead, status: string) {
     <template #body>
       <p class="text-sm text-muted">
         Homeowners who used the Cost Calculator and asked for a detailed BQ. Each request stores the exact inputs and estimate they saw.
+        <b>Detailed report</b> re-prices the request with today's rates and shows how every figure is derived: the per-m² estimate, the quantities, each bill line, services, statutory fees and a priced materials schedule.
       </p>
       <div v-if="!leads.length" class="text-center py-16 border border-dashed border-default rounded-xl text-muted">
         No requests yet.
       </div>
       <div class="grid lg:grid-cols-2 gap-4">
-        <UCard v-for="l in leads" :key="l.id">
+        <UCard v-for="l in pagedLeads" :key="l.id">
           <div class="flex items-start justify-between gap-3">
             <div>
               <p class="font-semibold text-highlighted">
@@ -52,10 +55,16 @@ async function setStatus(l: Lead, status: string) {
           <p v-if="l.message" class="mt-2 text-sm text-muted italic">
             "{{ l.message }}"
           </p>
-          <p class="mt-3 text-xs text-dimmed">
-            {{ new Date(l.createdAt).toLocaleString('en-KE') }}
-          </p>
+          <div class="mt-3 flex items-center justify-between gap-3">
+            <p class="text-xs text-dimmed">
+              {{ new Date(l.createdAt).toLocaleString('en-KE') }}
+            </p>
+            <UButton size="sm" icon="i-lucide-file-text" label="Detailed report" :to="`/admin/lead-report/${l.id}`" target="_blank" />
+          </div>
         </UCard>
+      </div>
+      <div class="rounded-xl border border-default overflow-hidden empty:hidden">
+        <TablePager v-model:page="page" v-model:page-size="pageSize" :total="total" :from="from" :to="to" noun="requests" class="border-t-0" />
       </div>
     </template>
   </UDashboardPanel>

@@ -44,6 +44,7 @@ async function saveDefaults() {
   await refreshModules()
   await refreshNuxtData('bq-config')
 }
+const { rows: pagedModules, page, pageSize, total, from, to } = usePaged(modules, 'admin:module-defaults')
 const overrides = (key: string) => Object.keys(moduleRows.value.find(r => r.key === key)?.defaults ?? {}).length
 function optionsFor(i: ModuleCfg['inputs'][number]) {
   if (i.type === 'mix') return (config.value?.mixes ?? []).filter(m => m.kind === i.mixKind).map(m => ({ label: m.name, value: m.key }))
@@ -100,7 +101,7 @@ function optionsFor(i: ModuleCfg['inputs'][number]) {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="m in modules" :key="m.key">
+            <tr v-for="m in pagedModules" :key="m.key">
               <td class="font-medium whitespace-nowrap">
                 {{ m.name }}
               </td>
@@ -114,6 +115,7 @@ function optionsFor(i: ModuleCfg['inputs'][number]) {
             </tr>
           </tbody>
         </table>
+        <TablePager v-model:page="page" v-model:page-size="pageSize" :total="total" :from="from" :to="to" noun="modules" />
       </UCard>
 
       <UModal :open="!!editing" :title="`Defaults: ${editing?.name}`" :ui="{ content: 'sm:max-w-2xl' }" @update:open="(v: boolean) => { if (!v) editing = null }">
