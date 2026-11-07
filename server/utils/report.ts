@@ -189,8 +189,13 @@ export async function buildLeadReport(id: string) {
     { key: 'walling', label: 'Internal walling', inputs: { length: round(intLength), height: params.wallHeight, openings: round(Math.max(0, intLength * params.wallHeight - drivers.int_wall_area!)), thickness: 0.15 } },
     { key: 'beams', label: 'Ring beams & lintels', inputs: { length: round((drivers.ext_perimeter! + footprint * params.internalWallRatio) * floors), soffit: 0 } },
     ...(drivers.upper_floor_area! > 0 ? [{ key: 'suspended_slab', label: 'Suspended slabs', inputs: { area: drivers.upper_floor_area!, perimeter: round(drivers.ext_perimeter! * (floors - 1)) } }] : []),
+    // Roof over the footprint, taken as a 1.5 : 1 rectangle
+    { key: 'roofing', label: 'Roof structure & covering', inputs: { length: round(Math.sqrt(footprint * 1.5)), width: round(footprint / Math.sqrt(footprint * 1.5)), overhang: params.roofOverhang } },
     { key: 'plaster', label: 'Internal plaster', inputs: { area: drivers.plaster_area!, thickness: 0.015, location: 'internal' } },
-    { key: 'plaster', label: 'External render', inputs: { area: drivers.ext_wall_area!, thickness: 0.02, location: 'external' } }
+    { key: 'plaster', label: 'External render', inputs: { area: drivers.ext_wall_area!, thickness: 0.02, location: 'external' } },
+    { key: 'tiling', label: 'Floor tiling', inputs: { area: drivers.total_floor_area! } },
+    { key: 'painting', label: 'Internal painting (walls & ceilings)', inputs: { area: round(drivers.plaster_area! + drivers.total_floor_area!), surface: 'internal' } },
+    { key: 'painting', label: 'External painting', inputs: { area: drivers.ext_wall_area!, surface: 'external' } }
   ]
   const wastagePercent = 5
   const elementsMaterials: { label: string, inputs: Record<string, number | string>, materials: PricedMaterial[], total: number, missing: number }[] = []

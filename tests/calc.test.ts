@@ -107,7 +107,7 @@ describe('construction sequence', () => {
     const { MODULES } = await import('../shared/calc/modules')
     expect(MODULES.map(m => m.key)).toEqual([
       'excavation', 'blinding', 'strip_footing', 'column_bases', 'foundation_walling', 'hardcore',
-      'ground_slab', 'columns', 'walling', 'beams', 'suspended_slab', 'plaster'
+      'ground_slab', 'columns', 'walling', 'beams', 'suspended_slab', 'roofing', 'plaster', 'tiling', 'painting'
     ])
     for (const m of MODULES) {
       expect(m.stage).toBeTruthy()
@@ -121,5 +121,84 @@ describe('construction sequence', () => {
     expect(nextStage('build')).toBeNull()
     expect(stageForStatus('submitted')).toBe('review')
     expect(stageForStatus('issued')).toBe('build')
+  })
+})
+
+describe('extended materials', () => {
+  const m = (r: { materials: { materialKey: string, quantity: number, netQuantity: number }[] }, key: string) => r.materials.find(x => x.materialKey === key)
+
+  it('columns add formwork timber per foot, nails and mixer/poker hire', () => {
+    const def = MODULE_MAP.columns!
+    const r = def.compute({ ...moduleDefaults(def), count: 10 }, ctx(5))
+    const formwork = 10 * 2 * (0.23 + 0.23) * 3 // 27.6 m²
+    expect(m(r, 'timber_6x1')!.netQuantity).toBeCloseTo(formwork * 22 / 3, 1)
+    expect(m(r, 'timber_2x2')!.netQuantity).toBeCloseTo(formwork * 10 / 3, 1)
+    expect(m(r, 'wire_nails')).toBeTruthy()
+    expect(m(r, 'hire_mixer')!.quantity).toBe(1) // 1.59 m³ → 1 day
+    expect(m(r, 'hire_poker')!.quantity).toBe(1)
+    const formworkLine = r.bqLines.find(l => l.libraryCode === 'SUP-400')!
+    expect(formworkLine.materials).toContain('timber_6x1')
+  })
+
+  it('hand mixing drops the plant hire', () => {
+    const def = MODULE_MAP.columns!
+    const r = def.compute({ ...moduleDefaults(def), count: 10, plant: 'hand' }, ctx())
+    expect(m(r, 'hire_mixer')).toBeUndefined()
+  })
+
+  it('suspended slab hires steel props without wastage, or buys bluegum poles', () => {
+    const def = MODULE_MAP.suspended_slab!
+    const steel = def.compute({ ...moduleDefaults(def), area: 100 }, ctx(10))
+    expect(m(steel, 'hire_steel_prop')!.quantity).toBe(80 * 21) // 0.8 props/m² × 21 days, no wastage
+    const poles = def.compute({ ...moduleDefaults(def), area: 100, propping: 'bluegum' }, ctx(0))
+    expect(m(poles, 'bluegum_pole')!.quantity).toBe(80)
+    expect(m(poles, 'hire_steel_prop')).toBeUndefined()
+  })
+
+  it('ground slab adds termiticide concentrate at 50 ml/m² routed to the anti-termite line', () => {
+    const def = MODULE_MAP.ground_slab!
+    const r = def.compute({ ...moduleDefaults(def), area: 120 }, ctx(0))
+    expect(m(r, 'termiticide')!.quantity).toBeCloseTo(6, 2)
+    expect(r.bqLines.find(l => l.libraryCode === 'SUB-600')!.materials).toEqual(['termiticide'])
+  })
+
+  it('foundation walling adds DPC rolls; walling can use concrete blocks', () => {
+    const fw = MODULE_MAP.foundation_walling!
+    const r = fw.compute({ ...moduleDefaults(fw), length: 65 }, ctx(0))
+    expect(m(r, 'dpc_roll')!.quantity).toBe(3) // 65 m ÷ 30 m
+    const w = MODULE_MAP.walling!
+    const blocks = w.compute({ ...moduleDefaults(w), length: 10, thickness: 0.15, unitType: 'block' }, ctx(0))
+    expect(m(blocks, 'block_150')).toBeTruthy()
+    expect(m(blocks, 'stone_150')).toBeUndefined()
+  })
+
+  it('hardcore uses murram blinding and plate compactor hire by default', () => {
+    const def = MODULE_MAP.hardcore!
+    const r = def.compute({ ...moduleDefaults(def), area: 250 }, ctx(0))
+    expect(m(r, 'murram')).toBeTruthy()
+    expect(m(r, 'hire_compactor')!.quantity).toBe(2) // 250 m² ÷ 200 m²/day
+  })
+
+  it('roofing: trusses, timber per foot and sheets for a 12 × 8 m house at 25°', () => {
+    const def = MODULE_MAP.roofing!
+    const r = def.compute({ ...moduleDefaults(def), length: 12, width: 8 }, ctx(0))
+    expect(r.lines[0]!.value).toBeCloseTo(134.0, 0) // 13.2 × 9.2 ÷ cos 25°
+    expect(r.lines[1]!.value).toBe(11) // trusses
+    expect(m(r, 'timber_4x2')!.netQuantity).toBeCloseTo(733.8, 0) // (rafters + ties + wall plates) m × 3.28
+    expect(m(r, 'sheet_g28')!.netQuantity).toBeCloseTo(190.4, 0) // area ÷ 0.76 × 1.08
+    expect(m(r, 'ridge_cap')!.netQuantity).toBeCloseTo(13.2, 2)
+    expect(m(r, 'gutter_pvc')!.quantity).toBe(7) // 26.4 m ÷ 4 m
+    expect(r.warnings).toEqual([])
+  })
+
+  it('tiling and painting quantities', () => {
+    const t = MODULE_MAP.tiling!
+    const tr = t.compute({ ...moduleDefaults(t), area: 45 }, ctx(0))
+    expect(m(tr, 'tile_adhesive')!.quantity).toBe(10) // 45 ÷ 4.5
+    expect(m(tr, 'tile_grout')!.quantity).toBe(18) // 45 × 0.4
+    const p = MODULE_MAP.painting!
+    const pr = p.compute({ ...moduleDefaults(p), area: 200 }, ctx(0))
+    expect(m(pr, 'emulsion_paint')!.quantity).toBeCloseTo(40, 2) // 200 × 2 coats ÷ 10
+    expect(m(pr, 'undercoat')!.quantity).toBeCloseTo(25, 2) // 200 ÷ 8
   })
 })

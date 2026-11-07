@@ -33,6 +33,14 @@ async function savePrice() {
   await refreshCurrent()
 }
 const refreshConfig = () => refreshNuxtData('bq-config')
+
+// Category filter for the (long) materials list
+const categoryFilter = ref('all')
+const { data: allMaterials } = await useFetch<{ category: string }[]>('/api/admin/ref/materials', { server: false, default: () => [], key: 'materials-categories' })
+const categoryItems = computed(() => [
+  { label: 'All categories', value: 'all' },
+  ...[...new Set(allMaterials.value.map(m => m.category))].sort().map(c => ({ label: c, value: c }))
+])
 const { rows: pagedHistory, page, pageSize, total, from, to } = usePaged(history, 'admin:price-history')
 </script>
 
@@ -46,20 +54,27 @@ const { rows: pagedHistory, page, pageSize, total, from, to } = usePaged(history
 
       <AdminRefTable
         v-if="tab === 'materials'"
+        :key="categoryFilter"
         name="materials"
-        title="Materials"
-        description="Keys are used by the calculator formulas (cement, sand, ballast, y12, brc_a142, stone_200...). Prices are effective-dated; add a location price to override the national price in one town."
+        title="Materials, timber & plant hire"
+        description="Keys are used by the calculator formulas (cement, timber_4x2, termiticide, hire_steel_prop...). Timber is priced per running foot; hire items per day (or per prop-day). Prices are effective-dated; add a location price to override the national price in one town."
+        :filter="categoryFilter === 'all' ? undefined : (r: Record<string, unknown>) => r.category === categoryFilter"
         :columns="[
           { key: 'key', label: 'Key', createOnly: true },
           { key: 'name', label: 'Name' },
-          { key: 'unit', label: 'Unit' },
+          { key: 'size', label: 'Size / specification', help: 'e.g. 4″ × 2″ (100 × 50 mm), 50 kg bag, 2.4 × 4.8 m' },
+          { key: 'unit', label: 'Unit', help: 'ft for timber per foot; day or prop-day for hire' },
           { key: 'category', label: 'Category' },
+          { key: 'kind', label: 'Type', type: 'select', options: [{ label: 'Material', value: 'material' }, { label: 'Plant / equipment hire', value: 'hire' }] },
           { key: 'description', label: 'Description', type: 'textarea', formOnly: true },
           { key: 'sort', label: 'Order', type: 'number', step: 1, formOnly: true },
           { key: 'active', label: 'Active', type: 'boolean', inline: true }
         ]"
-        :defaults="{ category: 'General', unit: 'piece' }"
+        :defaults="{ category: categoryFilter === 'all' ? 'General' : categoryFilter, unit: 'piece', kind: 'material', size: '' }"
       >
+        <template #actions>
+          <USelect v-model="categoryFilter" size="sm" :items="categoryItems" class="w-52" aria-label="Filter by category" />
+        </template>
         <template #extra-head>
           <th class="num">
             National price

@@ -51,6 +51,8 @@ export interface BqLine {
   libraryCode?: string
   /** If true, the module's material cost (+ labour uplift) is priced onto this line. */
   carriesMaterialCost?: boolean
+  /** Material keys whose cost belongs to this line (e.g. formwork timber → the formwork line). */
+  materials?: string[]
 }
 
 export interface ModuleResult {

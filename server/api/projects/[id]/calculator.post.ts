@@ -12,9 +12,10 @@ type Line = Awaited<ReturnType<typeof runModule>>['bqLines'][number]
 type Priced = Awaited<ReturnType<typeof runModule>>['materials'][number]
 
 /**
- * Assign each material to the BQ line it is part of, so no cost is counted twice:
- * reinforcement → the kg line, BRC mesh → the mesh line, DPM → the membrane line,
- * hoop iron → the hoop-iron line; everything else → the line that carries the material cost.
+ * Assign each material to the BQ line it is part of, so no cost is counted twice. A line can
+ * name its materials explicitly (e.g. formwork timber → formwork line, termiticide → anti-termite
+ * line); otherwise reinforcement → the kg line, BRC mesh → mesh line, DPM → membrane line,
+ * hoop iron → hoop-iron line, and everything else → the line that carries the material cost.
  */
 function routeMaterials(lines: Line[], materials: Priced[]) {
   const find = (test: (l: Line) => boolean) => lines.findIndex(test)
@@ -26,7 +27,9 @@ function routeMaterials(lines: Line[], materials: Priced[]) {
   const out = new Map<number, Priced[]>()
   for (const m of materials) {
     let target = carrier
-    if (/^[yr]\d+$/.test(m.materialKey) || m.materialKey === 'binding_wire') target = steel >= 0 ? steel : carrier
+    const named = find(l => !!l.materials?.includes(m.materialKey))
+    if (named >= 0) target = named
+    else if (/^[yr]\d+$/.test(m.materialKey) || m.materialKey === 'binding_wire') target = steel >= 0 ? steel : carrier
     else if (m.materialKey.startsWith('brc_')) target = mesh >= 0 ? mesh : carrier
     else if (m.materialKey === 'dpm') target = dpm >= 0 ? dpm : carrier
     else if (m.materialKey === 'hoop_iron') target = hoop >= 0 ? hoop : carrier

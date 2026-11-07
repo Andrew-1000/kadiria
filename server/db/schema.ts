@@ -175,6 +175,10 @@ export const materials = pgTable('materials', {
   name: text('name').notNull(),
   unit: text('unit').notNull(),
   category: text('category').notNull().default('General'),
+  /** Nominal size / specification, e.g. 4″ × 2″ (100 × 50 mm), 25 kg, 2.4 × 4.8 m. */
+  size: text('size').notNull().default(''),
+  /** 'material' is bought; 'hire' is plant or equipment priced per unit of time (e.g. per day). */
+  kind: text('kind').notNull().default('material'),
   description: text('description').notNull().default(''),
   active: boolean('active').notNull().default(true),
   sort: integer('sort').notNull().default(0)

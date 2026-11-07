@@ -120,7 +120,10 @@ const PARTS: Part[] = [
   { key: 'walling', shapes: ['M 112 96 h 36 v 98 h -36 Z'], bubble: [34, 146], anchor: [112, 146], kind: 'stones' },
   { key: 'plaster', shapes: ['M 106 96 h 6 v 98 h -6 Z', 'M 148 96 h 6 v 98 h -6 Z'], bubble: [226, 170], anchor: [154, 170] },
   { key: 'beams', shapes: ['M 106 82 h 420 v 14 h -420 Z'], bubble: [330, 120], anchor: [330, 96] },
-  { key: 'suspended_slab', shapes: ['M 90 68 h 480 v 14 h -480 Z'], bubble: [600, 75], anchor: [570, 75] }
+  { key: 'suspended_slab', shapes: ['M 90 68 h 480 v 14 h -480 Z'], bubble: [600, 75], anchor: [570, 75] },
+  { key: 'roofing', shapes: ['M 70 52 L 330 8 L 590 52 Z'], bubble: [440, 22], anchor: [400, 28] },
+  { key: 'tiling', shapes: ['M 160 189 h 340 v 5 h -340 Z'], bubble: [420, 168], anchor: [420, 189] },
+  { key: 'painting', shapes: ['M 154 96 h 4 v 93 h -4 Z'], bubble: [226, 128], anchor: [158, 128] }
 ]
 const parts = computed(() => PARTS.map(p => ({ ...p, n: seq(p.key), enabled: modules.value.some(m => m.key === p.key) })))
 const hovered = ref<string | null>(null)
@@ -231,7 +234,7 @@ function printReport() {
         <div class="grid lg:grid-cols-[minmax(0,1fr)_20rem] border-b border-default">
           <div class="lg:border-e border-default p-2 sm:p-4">
             <p class="px-1 text-[10px] uppercase tracking-widest text-dimmed flex justify-between">
-              <span>Section A–A · typical wall, foundation and floor</span>
+              <span>Section A–A · foundation, floor, wall and roof</span>
               <span class="font-mono normal-case tracking-normal">{{ hovered ? nameOf(hovered) : 'hover or click a part' }}</span>
             </p>
             <svg viewBox="0 0 640 360" class="w-full mt-1 no-print" role="group" aria-label="Building cross-section. Select an element to take off.">
@@ -252,7 +255,7 @@ function printReport() {
               <line x1="0" y1="220" x2="640" y2="220" class="stroke-(--ui-text-muted)" stroke-width="2" />
               <text x="8" y="214" font-size="9" font-family="ui-monospace, monospace" class="fill-(--ui-text-dimmed)">GL</text>
               <!-- upper wall (context) -->
-              <rect x="112" y="16" width="36" height="52" fill="url(#dc-stones)" opacity="0.4" />
+              <rect x="112" y="52" width="36" height="16" fill="url(#dc-stones)" opacity="0.4" />
 
               <g
                 v-for="p in parts"

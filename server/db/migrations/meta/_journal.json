@@ -15,6 +15,13 @@
       "when": 1794085181927,
       "tag": "0001_module_site_sequence",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794089737049,
+      "tag": "0002_material_size_kind_new_modules",
+      "breakpoints": true
     }
   ]
 }

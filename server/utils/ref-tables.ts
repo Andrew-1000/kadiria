@@ -58,7 +58,7 @@ export const REF_TABLES: Record<string, RefTable> = {
   },
   materials: {
     label: 'Materials', table: t.materials, pk: t.materials.id, pkType: 'int', orderBy: [t.materials.category, t.materials.sort],
-    create: z.object({ key, name: text(), unit: text(24), category: text().default('General'), description: optText().default(''), active: z.boolean().default(true), sort: z.coerce.number().int().default(0) }),
+    create: z.object({ key, name: text(), unit: text(24), category: text().default('General'), size: optText(120).default(''), kind: z.enum(['material', 'hire']).default('material'), description: optText().default(''), active: z.boolean().default(true), sort: z.coerce.number().int().default(0) }),
     immutable: ['key']
   },
   mixes: {

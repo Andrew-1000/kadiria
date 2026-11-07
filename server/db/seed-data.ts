@@ -35,7 +35,31 @@ export const CONSTANTS = [
   { key: 'stone_length', label: 'Machine-cut stone length', value: 0.4, unit: 'm', groupName: 'Walling & membranes', description: '', sort: 41 },
   { key: 'stone_height', label: 'Machine-cut stone height', value: 0.2, unit: 'm', groupName: 'Walling & membranes', description: '', sort: 42 },
   { key: 'mortar_joint', label: 'Mortar joint thickness', value: 0.012, unit: 'm', groupName: 'Walling & membranes', description: '', sort: 43 },
-  { key: 'bq_labour_uplift_percent', label: 'Labour & overheads on calculator material cost', value: 30, unit: '%', groupName: 'BQ pricing', description: 'Used when a calculator result is pushed into a BQ and no library rate exists.', sort: 50 }
+  { key: 'bq_labour_uplift_percent', label: 'Labour & overheads on calculator material cost', value: 30, unit: '%', groupName: 'BQ pricing', description: 'Used when a calculator result is pushed into a BQ and no library rate exists.', sort: 50 },
+  // Formwork & propping
+  { key: 'formwork_board_ft_per_m2', label: 'Formwork boards (6″×1″) per m²', value: 22, unit: 'ft/m²', groupName: 'Formwork & propping', description: '1 m² ÷ 150 mm board width ≈ 6.6 m ≈ 22 ft.', sort: 60 },
+  { key: 'formwork_batten_ft_per_m2', label: 'Formwork battens (2″×2″) per m²', value: 10, unit: 'ft/m²', groupName: 'Formwork & propping', description: 'Studs and walings holding the boards.', sort: 61 },
+  { key: 'formwork_reuses', label: 'Uses of sawn formwork timber', value: 3, unit: 'uses', groupName: 'Formwork & propping', description: 'Timber is reused this many times; quantities are divided by it.', sort: 62 },
+  { key: 'formwork_nails_kg_per_m2', label: 'Nails per m² of formwork', value: 0.15, unit: 'kg/m²', groupName: 'Formwork & propping', description: '', sort: 63 },
+  { key: 'props_per_m2', label: 'Props per m² of slab soffit', value: 0.8, unit: 'nr/m²', groupName: 'Formwork & propping', description: 'About 1.1 m spacing each way.', sort: 64 },
+  { key: 'props_hire_days', label: 'Prop hire period per slab', value: 21, unit: 'days', groupName: 'Formwork & propping', description: 'Props stay until the slab can carry itself (about 3 weeks).', sort: 65 },
+  // Plant
+  { key: 'mixer_m3_per_day', label: 'Concrete mixer output', value: 10, unit: 'm³/day', groupName: 'Plant', description: '350 L mixer, one shift.', sort: 70 },
+  { key: 'compactor_m2_per_day', label: 'Plate compactor output', value: 200, unit: 'm²/day', groupName: 'Plant', description: 'Hardcore in layers.', sort: 71 },
+  // Treatment
+  { key: 'termiticide_ml_per_m2', label: 'Termiticide concentrate per m²', value: 50, unit: 'ml/m²', groupName: 'Treatment', description: '1% emulsion applied at 5 L of mix per m² of soil (chlorpyrifos type).', sort: 80 },
+  { key: 'dpc_roll_length', label: 'DPC roll length', value: 30, unit: 'm', groupName: 'Treatment', description: '', sort: 81 },
+  // Roofing
+  { key: 'sheet_cover_width', label: 'Corrugated sheet cover width', value: 0.76, unit: 'm', groupName: 'Roofing', description: 'Effective width after side laps.', sort: 90 },
+  { key: 'sheet_lap_factor', label: 'Roof sheet end-lap allowance', value: 1.08, unit: '×', groupName: 'Roofing', description: '', sort: 91 },
+  { key: 'roofing_nails_kg_per_m2', label: 'Roofing nails per m² of roof', value: 0.08, unit: 'kg/m²', groupName: 'Roofing', description: '', sort: 92 },
+  { key: 'truss_nails_kg', label: 'Nails per roof truss', value: 1.2, unit: 'kg', groupName: 'Roofing', description: '', sort: 93 },
+  { key: 'preservative_l_per_100ft', label: 'Timber preservative per 100 ft of timber', value: 1.5, unit: 'L', groupName: 'Roofing', description: 'Brush-applied, two coats.', sort: 94 },
+  // Finishes
+  { key: 'paint_m2_per_l', label: 'Paint coverage per coat', value: 10, unit: 'm²/L', groupName: 'Finishes', description: 'On smooth plaster.', sort: 100 },
+  { key: 'undercoat_m2_per_l', label: 'Undercoat coverage', value: 8, unit: 'm²/L', groupName: 'Finishes', description: '', sort: 101 },
+  { key: 'adhesive_m2_per_bag', label: 'Tile adhesive coverage', value: 4.5, unit: 'm²/bag', groupName: 'Finishes', description: '25 kg bag with a 6 mm notched trowel.', sort: 102 },
+  { key: 'grout_kg_per_m2', label: 'Grout per m² of tiling', value: 0.4, unit: 'kg/m²', groupName: 'Finishes', description: '', sort: 103 }
 ]
 
 export const COUNTRIES = [{ code: 'KE', name: 'Kenya', currency: 'KES', vatPercent: 16, active: true, sort: 1 }]
@@ -81,27 +105,96 @@ export const ELEMENTS = [
   { key: 'external', label: 'External works', percent: 5, sort: 7 }
 ]
 
-/** [key, name, unit, category, national price KES] */
-export const MATERIALS: [string, string, string, string, number][] = [
-  ['cement', 'Cement 42.5N (50 kg bag)', 'bag', 'Binders & aggregates', 780],
-  ['sand', 'River sand', 'tonne', 'Binders & aggregates', 2500],
-  ['ballast', 'Ballast 20 mm', 'tonne', 'Binders & aggregates', 2000],
-  ['hardcore', 'Hardcore', 'tonne', 'Binders & aggregates', 1400],
-  ['stone_200', 'Machine-cut stone 200 mm (9")', 'piece', 'Walling', 75],
-  ['stone_150', 'Machine-cut stone 150 mm (6")', 'piece', 'Walling', 60],
-  ['hoop_iron', 'Hoop iron 20 g × 32 mm', 'm', 'Walling', 30],
-  ['r6', 'R6 mild steel bar (12 m)', 'bar', 'Reinforcement', 320],
-  ['r8', 'R8 mild steel bar (12 m)', 'bar', 'Reinforcement', 560],
-  ['y8', 'Y8 high-yield bar (12 m)', 'bar', 'Reinforcement', 600],
-  ['y10', 'Y10 high-yield bar (12 m)', 'bar', 'Reinforcement', 880],
-  ['y12', 'Y12 high-yield bar (12 m)', 'bar', 'Reinforcement', 1550],
-  ['y16', 'Y16 high-yield bar (12 m)', 'bar', 'Reinforcement', 2750],
-  ['y20', 'Y20 high-yield bar (12 m)', 'bar', 'Reinforcement', 4300],
-  ['y25', 'Y25 high-yield bar (12 m)', 'bar', 'Reinforcement', 6700],
-  ['binding_wire', 'Binding wire', 'kg', 'Reinforcement', 250],
-  ['brc_a142', 'BRC mesh A142 (2.4 × 4.8 m)', 'sheet', 'Reinforcement', 5800],
-  ['brc_a98', 'BRC mesh A98 (2.4 × 4.8 m)', 'sheet', 'Reinforcement', 4300],
-  ['dpm', 'Polythene DPM 1000 gauge', 'm²', 'Membranes', 90]
+export interface SeedMaterial {
+  key: string
+  name: string
+  size: string
+  unit: string
+  category: string
+  kind?: 'material' | 'hire'
+  price: number
+  source: string
+}
+
+const G = 'Seed: 2026 Nairobi market guides'
+const IND = 'Indicative, confirm with suppliers'
+
+/**
+ * National default prices (KES). Sources: Jenga Hub, Fundi Link, Beyond Forest, BHD and Aspax 2026
+ * price guides; Oak Timber Suppliers (timber per foot); Goldline / Smart Builders (mabati per metre);
+ * pest-control retailers (termiticide); Beyond Forest, Tinga Works, Monolith Africa (plant hire);
+ * Builders Store / Buy More Mall (gypsum, PPR, cable). Items marked "indicative" had no firm source.
+ */
+export const MATERIALS: SeedMaterial[] = [
+  // Binders & aggregates
+  { key: 'cement', name: 'Cement 42.5N', size: '50 kg bag', unit: 'bag', category: 'Binders & aggregates', price: 780, source: G },
+  { key: 'sand', name: 'River sand', size: 'per tonne', unit: 'tonne', category: 'Binders & aggregates', price: 2500, source: G },
+  { key: 'ballast', name: 'Ballast', size: '20 mm, per tonne', unit: 'tonne', category: 'Binders & aggregates', price: 2000, source: G },
+  { key: 'hardcore', name: 'Hardcore', size: 'per tonne', unit: 'tonne', category: 'Binders & aggregates', price: 1400, source: G },
+  { key: 'murram', name: 'Murram', size: 'per tonne', unit: 'tonne', category: 'Binders & aggregates', price: 1500, source: 'Jenga Hub 2026 (KES 1,200–1,800/t)' },
+  { key: 'water', name: 'Water for construction (bowser delivered)', size: 'per m³ (1,000 L)', unit: 'm³', category: 'Binders & aggregates', price: 600, source: IND },
+  // Walling
+  { key: 'stone_200', name: 'Machine-cut stone', size: '9″ (200 mm) × 400 mm face', unit: 'piece', category: 'Walling', price: 75, source: G },
+  { key: 'stone_150', name: 'Machine-cut stone', size: '6″ (150 mm) × 400 mm face', unit: 'piece', category: 'Walling', price: 60, source: G },
+  { key: 'block_200', name: 'Concrete block', size: '9″ (200 mm) × 400 × 200 mm', unit: 'piece', category: 'Walling', price: 70, source: IND },
+  { key: 'block_150', name: 'Concrete block', size: '6″ (150 mm) × 400 × 200 mm', unit: 'piece', category: 'Walling', price: 55, source: 'Jenga Hub / Goldstay 2026 (KES 35–65)' },
+  { key: 'hoop_iron', name: 'Hoop iron', size: '20 gauge × 32 mm', unit: 'm', category: 'Walling', price: 30, source: G },
+  // Reinforcement
+  { key: 'r6', name: 'R6 mild steel bar', size: '6 mm × 12 m', unit: 'bar', category: 'Reinforcement', price: 320, source: G },
+  { key: 'r8', name: 'R8 mild steel bar', size: '8 mm × 12 m', unit: 'bar', category: 'Reinforcement', price: 560, source: G },
+  { key: 'y8', name: 'Y8 high-yield bar', size: '8 mm × 12 m', unit: 'bar', category: 'Reinforcement', price: 600, source: G },
+  { key: 'y10', name: 'Y10 high-yield bar', size: '10 mm × 12 m', unit: 'bar', category: 'Reinforcement', price: 880, source: G },
+  { key: 'y12', name: 'Y12 high-yield bar', size: '12 mm × 12 m', unit: 'bar', category: 'Reinforcement', price: 1550, source: G },
+  { key: 'y16', name: 'Y16 high-yield bar', size: '16 mm × 12 m', unit: 'bar', category: 'Reinforcement', price: 2750, source: G },
+  { key: 'y20', name: 'Y20 high-yield bar', size: '20 mm × 12 m', unit: 'bar', category: 'Reinforcement', price: 4300, source: G },
+  { key: 'y25', name: 'Y25 high-yield bar', size: '25 mm × 12 m', unit: 'bar', category: 'Reinforcement', price: 6700, source: G },
+  { key: 'binding_wire', name: 'Binding wire', size: 'per kg (20–25 kg rolls)', unit: 'kg', category: 'Reinforcement', price: 250, source: 'Carboncube / Jenga Hub 2026 (KES 3,600–6,000 per roll)' },
+  { key: 'brc_a142', name: 'BRC mesh A142', size: '2.4 × 4.8 m sheet', unit: 'sheet', category: 'Reinforcement', price: 5800, source: G },
+  { key: 'brc_a98', name: 'BRC mesh A98', size: '2.4 × 4.8 m sheet', unit: 'sheet', category: 'Reinforcement', price: 4300, source: G },
+  // Waterproofing & treatment
+  { key: 'dpm', name: 'Polythene DPM', size: '1000 gauge', unit: 'm²', category: 'Waterproofing & treatment', price: 90, source: G },
+  { key: 'dpc_roll', name: 'Bituminous felt DPC', size: '200 mm × 30 m roll', unit: 'roll', category: 'Waterproofing & treatment', price: 2500, source: 'BHD / Buy More Mall 2026 (KES 1,200–4,500)' },
+  { key: 'termiticide', name: 'Anti-termite chemical (chlorpyrifos 480 g/L, e.g. Gladiator)', size: '1 L concentrate, used at 1%', unit: 'L', category: 'Waterproofing & treatment', price: 5900, source: 'Pest-control retailers 2026 (Gladiator 1 L)' },
+  { key: 'timber_preservative', name: 'Timber preservative (Solignum / creosote type)', size: 'per litre', unit: 'L', category: 'Waterproofing & treatment', price: 650, source: IND },
+  // Timber (cypress, per running foot)
+  { key: 'timber_2x2', name: 'Cypress timber', size: '2″ × 2″ (50 × 50 mm)', unit: 'ft', category: 'Timber', price: 30, source: 'Beyond Forest / Randtech 2026 (KES 23–35/ft)' },
+  { key: 'timber_3x2', name: 'Cypress timber', size: '3″ × 2″ (75 × 50 mm)', unit: 'ft', category: 'Timber', price: 32, source: 'Oak Timber Suppliers (KES 28/ft) – Randtech (KES 43/ft)' },
+  { key: 'timber_4x2', name: 'Cypress timber', size: '4″ × 2″ (100 × 50 mm)', unit: 'ft', category: 'Timber', price: 42, source: 'Oak Timber (KES 38/ft), Jenga Hub (KES 35–50/ft)' },
+  { key: 'timber_6x2', name: 'Cypress timber', size: '6″ × 2″ (150 × 50 mm)', unit: 'ft', category: 'Timber', price: 70, source: 'Oak Timber (KES 75/ft), Jenga Hub (KES 55–75/ft)' },
+  { key: 'timber_6x1', name: 'Cypress boards', size: '6″ × 1″ (150 × 25 mm)', unit: 'ft', category: 'Timber', price: 45, source: 'Beyond Forest 2026 (KES 50–80/ft across species)' },
+  { key: 'timber_8x1', name: 'Cypress fascia board', size: '8″ × 1″ (200 × 25 mm)', unit: 'ft', category: 'Timber', price: 60, source: IND },
+  { key: 'timber_9x1', name: 'Cypress fascia board', size: '9″ × 1″ (225 × 25 mm)', unit: 'ft', category: 'Timber', price: 70, source: IND },
+  { key: 'bluegum_pole', name: 'Bluegum (eucalyptus) prop pole', size: '3–4 m, 75–100 mm', unit: 'piece', category: 'Formwork & propping', price: 300, source: IND },
+  // Hardware & fixings
+  { key: 'wire_nails', name: 'Wire nails (assorted 2″–6″)', size: 'per kg', unit: 'kg', category: 'Hardware & fixings', price: 250, source: 'Carboncube / Aspax 2026 (KES 150–400/kg)' },
+  { key: 'roofing_nails', name: 'Roofing nails (umbrella head)', size: 'per kg', unit: 'kg', category: 'Hardware & fixings', price: 300, source: IND },
+  // Roofing
+  { key: 'sheet_g30', name: 'Pre-painted corrugated sheet G30', size: 'per metre length, 0.76 m cover', unit: 'm', category: 'Roofing', price: 600, source: 'Goldline (KES 520/m), Smart Builders (KES 610/m)' },
+  { key: 'sheet_g28', name: 'Pre-painted corrugated sheet G28', size: 'per metre length, 0.76 m cover', unit: 'm', category: 'Roofing', price: 700, source: 'Goldline (KES 650/m), Smart Builders (KES 730/m)' },
+  { key: 'ridge_cap', name: 'Ridge cap (pre-painted)', size: 'per metre', unit: 'm', category: 'Roofing', price: 450, source: IND },
+  { key: 'gutter_pvc', name: 'UPVC gutter', size: '4 m length', unit: 'piece', category: 'Roofing', price: 1700, source: 'Mabati Yetu (KES 1,600–1,800)' },
+  { key: 'downpipe_pvc', name: 'UPVC downpipe', size: '3 m length', unit: 'piece', category: 'Roofing', price: 1200, source: IND },
+  // Finishes
+  { key: 'emulsion_paint', name: 'Emulsion paint (vinyl silk / matt)', size: 'per litre (20 L tins)', unit: 'L', category: 'Finishes', price: 500, source: 'Aspax / Carboncube 2026 (KES 300–800/L)' },
+  { key: 'undercoat', name: 'Undercoat / primer', size: 'per litre', unit: 'L', category: 'Finishes', price: 420, source: IND },
+  { key: 'weathercoat', name: 'Exterior weathercoat paint', size: 'per litre', unit: 'L', category: 'Finishes', price: 700, source: IND },
+  { key: 'ceramic_tile', name: 'Ceramic floor tiles', size: '40 × 40 cm', unit: 'm²', category: 'Finishes', price: 1100, source: 'DLG / Beyond Forest 2026 (KES 950–1,300/m²)' },
+  { key: 'tile_adhesive', name: 'Tile adhesive (cement based)', size: '25 kg bag', unit: 'bag', category: 'Finishes', price: 1200, source: 'Jiji listings (KES 1,000–1,400 per 25 kg)' },
+  { key: 'tile_grout', name: 'Tile grout', size: 'per kg', unit: 'kg', category: 'Finishes', price: 250, source: IND },
+  { key: 'gypsum_board', name: 'Gypsum ceiling board', size: '9 mm, 4 × 8 ft', unit: 'sheet', category: 'Finishes', price: 750, source: 'Builders Store 2026 (Hada 9 mm)' },
+  // Plumbing & electrical
+  { key: 'ppr_25', name: 'PPR pipe PN16', size: '25 mm (¾″) × 4 m', unit: 'piece', category: 'Plumbing', price: 320, source: 'Builders Store (KES 320 per 4 m)' },
+  { key: 'pvc_110', name: 'PVC waste pipe', size: '110 mm (4″)', unit: 'piece', category: 'Plumbing', price: 2700, source: 'Aqua Hub Kenya' },
+  { key: 'water_tank_5000', name: 'Plastic water storage tank', size: '5,000 L', unit: 'piece', category: 'Plumbing', price: 35000, source: IND },
+  { key: 'cable_1_0', name: 'Twin & earth cable', size: '1.0 mm², 100 m roll', unit: 'roll', category: 'Electrical', price: 6600, source: 'Buy More Mall 2026' },
+  { key: 'cable_2_5', name: 'Power cable', size: '2.5 mm², 100 m roll', unit: 'roll', category: 'Electrical', price: 13500, source: 'Buy More Mall 2026' },
+  // Plant & equipment hire (priced per unit of time)
+  { key: 'hire_steel_prop', name: 'Adjustable steel prop (Acrow) hire', size: '1.8–3.3 m', unit: 'prop-day', category: 'Plant & equipment hire', kind: 'hire', price: 15, source: 'Indicative; Monolith Africa lists KES 180 per prop (period not stated)' },
+  { key: 'hire_scaffold', name: 'Scaffolding hire (H-frame set)', size: 'per frame set', unit: 'set-day', category: 'Plant & equipment hire', kind: 'hire', price: 300, source: 'Beyond Forest 2026 (KES 200–500/day)' },
+  { key: 'hire_mixer', name: 'Concrete mixer hire', size: '350 L, diesel', unit: 'day', category: 'Plant & equipment hire', kind: 'hire', price: 5500, source: 'Beyond Forest / Tinga Works (KES 5,000–7,000/day)' },
+  { key: 'hire_poker', name: 'Poker vibrator hire', size: 'petrol, with needle', unit: 'day', category: 'Plant & equipment hire', kind: 'hire', price: 1250, source: 'Market rate KES 1,000–1,500/day' },
+  { key: 'hire_compactor', name: 'Plate compactor hire', size: 'Wacker type', unit: 'day', category: 'Plant & equipment hire', kind: 'hire', price: 4000, source: 'Market rate KES 3,000–5,000/day' },
+  { key: 'hire_roller', name: 'Compactor roller hire', size: 'ride-on', unit: 'day', category: 'Plant & equipment hire', kind: 'hire', price: 25000, source: 'Construction Kenya 2026' }
 ]
 
 /** Example location overrides: [location name, material key, price]. */
@@ -144,6 +237,8 @@ export const LIBRARY: Lib[] = [
   ['PRE-030', 'preliminaries', 'General items', 'Water and electricity for the works', 'Sum', 200, 'lump_sum', 'total_floor_area', 1, false, true],
   ['PRE-040', 'preliminaries', 'General items', 'Site security and watchman for the duration of the works', 'Sum', 250, 'lump_sum', 'total_floor_area', 1, false, true],
   ['PRE-050', 'preliminaries', 'General items', 'Setting out the works and establishing levels', 'Sum', 60000, 'lump_sum', 'lump', 1, false, true],
+  ['PRE-060', 'preliminaries', 'Plant & equipment', 'Scaffolding hire, erection and dismantling for walling and finishes', 'Sum', 150, 'lump_sum', 'ext_wall_area', 1, false, true],
+  ['PRE-070', 'preliminaries', 'Plant & equipment', 'Concrete mixer, poker vibrator and plate compactor hire for the works', 'Sum', 120, 'lump_sum', 'total_floor_area', 1, false, true],
 
   ['SUB-010', 'substructure', 'Excavation & earthworks', 'Clear site of bushes, shrubs and grass and strip top soil average 150 mm deep', 'm²', 120, 'measured', 'footprint_area', 1.5, false, true],
   ['SUB-020', 'substructure', 'Excavation & earthworks', 'Excavate foundation trench not exceeding 1.5 m deep from stripped level', 'm³', 650, 'measured', 'trench_volume', 1, false, true],

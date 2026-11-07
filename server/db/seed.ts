@@ -45,13 +45,16 @@ for (const tier of d.TIERS) {
 }
 
 // Materials and prices
-for (const [i, [key, name, unit, category, price]] of d.MATERIALS.entries()) {
-  await db.insert(s.materials).values({ key, name, unit, category, sort: i + 1 }).onConflictDoNothing()
+let added = 0
+for (const [i, { key, name, size, unit, category, kind, price, source }] of d.MATERIALS.entries()) {
+  const inserted = await db.insert(s.materials).values({ key, name, size, unit, category, kind: kind ?? 'material', sort: i + 1 }).onConflictDoNothing().returning({ id: s.materials.id })
+  if (inserted.length) added++
   const [m] = await db.select().from(s.materials).where(eq(s.materials.key, key))
   if (!m) continue
   const priced = await db.select({ id: s.materialPrices.id }).from(s.materialPrices).where(and(eq(s.materialPrices.materialId, m.id), isNull(s.materialPrices.locationId))).limit(1)
-  if (!priced.length) await db.insert(s.materialPrices).values({ materialId: m.id, price, effectiveFrom: EFFECTIVE, source: 'Seed: 2026 Nairobi market guides' })
+  if (!priced.length) await db.insert(s.materialPrices).values({ materialId: m.id, price, effectiveFrom: EFFECTIVE, source })
 }
+if (added) console.log(`✔ ${added} new material(s) added to the catalogue`)
 for (const [locationName, key, price] of d.LOCATION_PRICES) {
   const [loc] = await db.select().from(s.locations).where(eq(s.locations.name, locationName))
   const [m] = await db.select().from(s.materials).where(eq(s.materials.key, key))
