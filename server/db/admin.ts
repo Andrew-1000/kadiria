@@ -8,10 +8,10 @@ import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as s from './schema'
-import { connectionOptions } from './connection'
+import { connectionOptions, normaliseDatabaseUrl } from './connection'
 import { hashPassword } from './password'
 
-const url = process.env.DATABASE_URL
+const url = process.env.DATABASE_URL ? normaliseDatabaseUrl(process.env.DATABASE_URL) : undefined
 const email = (process.env.ADMIN_EMAIL || process.env.SEED_ADMIN_EMAIL || '').trim()
 const password = process.env.ADMIN_PASSWORD || process.env.SEED_ADMIN_PASSWORD || ''
 if (!url) throw new Error('DATABASE_URL is not set.')

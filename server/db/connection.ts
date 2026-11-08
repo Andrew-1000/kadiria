@@ -1,6 +1,23 @@
 import type { Options, PostgresType } from 'postgres'
 
 /**
+ * Accept a DATABASE_URL whose password was pasted as-is (e.g. containing % or ,): if the password
+ * isn't valid URL encoding, encode it. Already-encoded passwords are left unchanged.
+ */
+export function normaliseDatabaseUrl(url: string): string {
+  const m = url.match(/^(postgres(?:ql)?:\/\/[^:/@]+:)(.*)@([^@]+)$/)
+  if (!m) return url
+  const [, head, password, rest] = m as unknown as [string, string, string, string]
+  try {
+    decodeURIComponent(password)
+    return url
+  }
+  catch {
+    return `${head}${encodeURIComponent(password)}@${rest}`
+  }
+}
+
+/**
  * postgres.js options for a DATABASE_URL.
  * - Hosted Supabase: encrypted connection (sslmode=require).
  * - Supabase transaction pooler (port 6543, used from serverless hosts such as Netlify):

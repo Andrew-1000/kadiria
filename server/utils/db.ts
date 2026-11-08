@@ -1,7 +1,7 @@
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from '../db/schema'
-import { connectionOptions } from '../db/connection'
+import { connectionOptions, normaliseDatabaseUrl } from '../db/connection'
 
 export const tables = schema
 
@@ -9,7 +9,7 @@ let instance: PostgresJsDatabase<typeof schema> | null = null
 
 export function useDb(): PostgresJsDatabase<typeof schema> {
   if (!instance) {
-    const url = process.env.DATABASE_URL
+    const url = process.env.DATABASE_URL ? normaliseDatabaseUrl(process.env.DATABASE_URL) : undefined
     if (!url) throw createError({ statusCode: 500, statusMessage: 'DATABASE_URL is not configured' })
     instance = drizzle(postgres(url, connectionOptions(url, 10)), { schema })
   }
