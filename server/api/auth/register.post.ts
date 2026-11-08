@@ -9,6 +9,7 @@ const schema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
+  assertSessionConfigured()
   await requireFeature('public_registration')
   const body = await parseBody(event, schema)
   const db = useDb()

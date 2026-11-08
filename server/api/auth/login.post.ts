@@ -4,6 +4,7 @@ import { eq, sql } from 'drizzle-orm'
 const schema = z.object({ email: z.string().trim().email(), password: z.string().min(1).max(200) })
 
 export default defineEventHandler(async (event) => {
+  assertSessionConfigured()
   const { email, password } = await parseBody(event, schema)
   const db = useDb()
   const [user] = await db.select().from(tables.users).where(sql`lower(${tables.users.email}) = lower(${email})`)

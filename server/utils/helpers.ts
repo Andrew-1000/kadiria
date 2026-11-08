@@ -82,3 +82,15 @@ export function dbError(e: unknown) {
 export function today(): string {
   return new Date().toISOString().slice(0, 10)
 }
+
+/**
+ * Sign-in needs NUXT_SESSION_PASSWORD (32+ characters) to seal the session cookie. Without it the
+ * session can't be created, so say so plainly instead of failing obscurely after a correct password.
+ */
+export function assertSessionConfigured() {
+  const configured = (useRuntimeConfig() as { session?: { password?: string } }).session?.password || process.env.NUXT_SESSION_PASSWORD || ''
+  if (configured.length < 32) {
+    console.error('[kadiria] NUXT_SESSION_PASSWORD is missing or shorter than 32 characters; sign-in cannot work.')
+    throw createError({ statusCode: 503, statusMessage: 'Sign-in is not set up on this server yet (NUXT_SESSION_PASSWORD missing). Please contact the administrator.' })
+  }
+}
