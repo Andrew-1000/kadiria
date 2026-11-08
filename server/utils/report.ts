@@ -198,7 +198,7 @@ export async function buildLeadReport(id: string) {
     { key: 'painting', label: 'External painting', inputs: { area: drivers.ext_wall_area!, surface: 'external' } }
   ]
   const wastagePercent = 5
-  const elementsMaterials: { label: string, inputs: Record<string, number | string>, materials: PricedMaterial[], total: number, missing: number }[] = []
+  const elementsMaterials: { key: string, stage: string, onSite: string, label: string, inputs: Record<string, number | string>, materials: PricedMaterial[], total: number, missing: number }[] = []
   for (const r of runs) {
     const def = MODULE_MAP[r.key]
     if (!def) continue
@@ -207,7 +207,7 @@ export async function buildLeadReport(id: string) {
     const used = { ...defaults, ...r.inputs } as Record<string, number | string>
     const out = def.compute(used, { constants, mixes, wastagePercent })
     const priced = await priceMaterials(out.materials, loc.id)
-    elementsMaterials.push({ label: r.label, inputs: used, materials: priced.items, total: priced.total, missing: priced.missing })
+    elementsMaterials.push({ key: r.key, stage: def.stage ?? '', onSite: def.onSite ?? '', label: r.label, inputs: used, materials: priced.items, total: priced.total, missing: priced.missing })
   }
   const consolidated = new Map<string, PricedMaterial>()
   for (const e of elementsMaterials) {

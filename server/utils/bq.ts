@@ -103,6 +103,7 @@ export async function generateBq(project: ProjectRow) {
 
   const structuralMissing = prereq.structural !== 'have'
   const siteMissing = prereq.site !== 'have'
+  const formworkMissing = prereq.formwork !== 'have'
   const approvalsPending = prereq.approvals !== 'have'
   const extraCodes = new Set<string>()
   if (siteMissing) extraCodes.add('PRO-140')
@@ -128,7 +129,7 @@ export async function generateBq(project: ProjectRow) {
       if (rows.length && bill) {
         await tx.insert(t.projectItems).values(rows.map(({ lib, line, i }) => ({
           projectId: project.id, billId: bill.id, section: lib.section, description: lib.description, unit: line.unit,
-          quantity: line.quantity, rate: line.rate, itemType: lib.itemType, source: 'wizard', libraryCode: lib.code, sort: i + 1
+          quantity: line.quantity, rate: line.rate, itemType: formworkMissing && lib.section === 'Formwork' && lib.itemType === 'measured' ? 'provisional' : lib.itemType, source: 'wizard', libraryCode: lib.code, sort: i + 1
         })))
       }
     }

@@ -384,22 +384,37 @@ function printNow() {
         </table>
 
         <h3 class="font-semibold mt-6">
-          Materials by element
+          Stage by stage
         </h3>
-        <div v-for="(e, i) in r.materials.elements" :key="i" class="mt-2 border-b border-neutral-200 pb-2">
-          <button type="button" class="w-full flex justify-between gap-4 text-left no-print" @click="open[i] = !open[i]">
-            <span><UIcon :name="open[i] ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="align-[-2px]" /> {{ e.label }}</span>
-            <span class="tabular-nums">{{ money(e.total) }}</span>
-          </button>
-          <p class="hidden print:flex justify-between font-medium">
-            <span>{{ e.label }}</span><span>{{ money(e.total) }}</span>
-          </p>
-          <div :class="open[i] ? '' : 'hidden print:block'" class="mt-1 ms-5 text-xs text-neutral-600">
-            <p>Inputs: {{ Object.entries(e.inputs).map(([k, v]) => `${k} ${typeof v === 'number' ? formatNumber(v, 2) : v}`).join(' · ') }}</p>
-            <p v-for="m in e.materials" :key="m.materialKey">
-              {{ m.label }}: {{ formatNumber(m.quantity, 2) }} {{ m.unit }} × {{ m.unitPrice !== null ? formatNumber(m.unitPrice, 2) : '—' }} = {{ m.amount !== null ? money(m.amount) : '—' }}
-            </p>
-          </div>
+        <p class="text-xs text-neutral-600">
+          Each element in the order it is built on site. In each drawing the blue part is the work in that stage; grey parts are already built and faint outlines come later.
+        </p>
+        <div class="mt-3 space-y-3">
+          <article v-for="(e, i) in r.materials.elements" :key="i" class="grid grid-cols-[13rem_1fr] sm:grid-cols-[18rem_1fr] gap-4 rounded border border-neutral-200 p-3 break-inside-avoid">
+            <div class="self-start rounded bg-neutral-50 p-1">
+              <BuildingSection :highlight="e.key" />
+            </div>
+            <div class="min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-neutral-500">
+                {{ e.stage || 'Stage' }}
+              </p>
+              <p class="flex justify-between gap-4 font-semibold">
+                <span>{{ e.label }}</span><span class="tabular-nums">{{ e.materials.length ? money(e.total) : 'Labour & plant' }}</span>
+              </p>
+              <p v-if="e.onSite" class="mt-1 text-xs text-neutral-700">
+                <span class="font-medium">On site:</span> {{ e.onSite }}
+              </p>
+              <button v-if="e.materials.length" type="button" class="mt-2 text-xs text-blue-700 no-print" @click="open[i] = !open[i]">
+                <UIcon :name="open[i] ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="align-[-2px]" /> {{ open[i] ? 'Hide' : 'Show' }} materials ({{ e.materials.length }})
+              </button>
+              <div :class="open[i] ? '' : 'hidden print:block'" class="mt-1 text-xs text-neutral-600">
+                <p>Inputs: {{ Object.entries(e.inputs).map(([k, v]) => `${k} ${typeof v === 'number' ? formatNumber(v, 2) : v}`).join(' · ') }}</p>
+                <p v-for="m in e.materials" :key="m.materialKey">
+                  {{ m.label }}: {{ formatNumber(m.quantity, 2) }} {{ m.unit }} × {{ m.unitPrice !== null ? formatNumber(m.unitPrice, 2) : '—' }} = {{ m.amount !== null ? money(m.amount) : '—' }}
+                </p>
+              </div>
+            </div>
+          </article>
         </div>
 
         <h3 class="font-semibold mt-6">

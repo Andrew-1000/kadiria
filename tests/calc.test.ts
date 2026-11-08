@@ -97,7 +97,13 @@ describe('BQ', () => {
     expect(d.ext_perimeter).toBeCloseTo(46, 1)
   })
   it('scores readiness', () => {
-    expect(readiness({ architectural: 'have', structural: 'have', site: 'have', specification: 'have', services: 'have', approvals: 'have' }).percent).toBe(100)
+    const all = { architectural: 'have', structural: 'have', formwork: 'have', site: 'have', specification: 'have', services: 'have', approvals: 'have' }
+    expect(readiness(all).percent).toBe(100)
+    // Without a formwork scheme the BQ is still tender-ready (formwork priced on standard allowances)
+    const noFormwork = readiness({ ...all, formwork: 'missing' })
+    expect(noFormwork.percent).toBe(95)
+    expect(noFormwork.level).toBe('Tender-ready')
+    expect(noFormwork.missing.map(p => p.key)).toEqual(['formwork'])
     expect(readiness({}).level).toBe('Order-of-cost estimate')
   })
 })
