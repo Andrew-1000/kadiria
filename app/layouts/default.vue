@@ -3,9 +3,11 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 import { STRUCTURE_LIST } from '#shared/calc/structures'
 
 /*
- * The one Kadiria frame: a sidebar with every major page (calculators, BQ projects, the
- * construction guide and, for admins, the back-office). Pages that build their own dashboard
- * panel set `ownPanel: true` in definePageMeta; every other page is wrapped in a panel here.
+ * Two frames, chosen by sign-in:
+ * - Signed out (the public): a website-style top bar with the calculators and the construction guide.
+ * - Signed in: the workspace sidebar with every major page and, for admins, the back-office.
+ *   Pages that build their own dashboard panel set `ownPanel: true` in definePageMeta; every other
+ *   page is wrapped in a panel here.
  * Embed pages (websites) and print views use their own minimal layouts.
  */
 const { data: config } = await useBqConfig()
@@ -74,13 +76,60 @@ const admin = computed<NavigationMenuItem[]>(() => user.value?.role !== 'admin'
       { label: 'Activity log', icon: 'i-lucide-history', to: '/admin/audit' }
     ])
 
+// Signed-out visitors get the public top bar; signed-in users (and workspace pages) the sidebar
+const workspaceView = computed(() => loggedIn.value || !!route.meta.ownPanel)
+const publicLinks = computed<NavigationMenuItem[]>(() => [
+  ...(flags.value.cost_estimator !== false ? [{ label: 'Cost calculator', icon: 'i-lucide-calculator', to: '/estimate' }] : []),
+  ...(flags.value.material_calculators !== false ? [{ label: 'Material calculators', icon: 'i-lucide-boxes', to: '/calculators' }, { label: 'Other structures', icon: 'i-lucide-shapes', to: '/structures' }] : []),
+  ...(flags.value.bq_projects !== false ? [{ label: 'BQ projects', icon: 'i-lucide-folder-kanban', to: '/login?redirect=/projects' }] : []),
+  { label: 'Construction guide', icon: 'i-lucide-signpost', children: guide.value.map(g => ({ ...g, description: undefined })) }
+])
+
 /** Title in the top bar of pages wrapped by this layout. */
 const TITLES: Record<string, string> = { '/': 'Home', '/estimate': 'Cost calculator', '/calculators': 'Material calculators', '/prepare': 'What a BQ needs', '/standards': 'Measurement & rules', '/structures': 'Other structures', '/login': 'Sign in', '/register': 'Create account' }
 const pageTitle = computed(() => TITLES[route.path] ?? (route.path.startsWith('/stage/') ? JOURNEY.find(s => s.to === route.path)?.title ?? 'Construction guide' : 'Kadiria'))
 </script>
 
 <template>
-  <UDashboardGroup unit="rem" storage="local">
+  <!-- Public site (signed out) -->
+  <div v-if="!workspaceView" class="min-h-dvh flex flex-col bg-default">
+    <UHeader :ui="{ root: 'no-print' }" mode="slideover">
+      <template #left>
+        <AppLogo />
+      </template>
+      <UNavigationMenu :items="publicLinks" variant="link" content-orientation="vertical" />
+      <template #right>
+        <UColorModeButton />
+        <UButton to="/login" color="neutral" variant="ghost" icon="i-lucide-log-in" label="Sign in" class="hidden sm:inline-flex" />
+        <UButton v-if="flags.public_registration !== false" to="/register" label="Create account" class="hidden md:inline-flex" />
+      </template>
+      <template #body>
+        <UNavigationMenu :items="publicLinks" orientation="vertical" class="-mx-2.5" />
+        <div class="mt-4 flex gap-2">
+          <UButton to="/login" color="neutral" variant="outline" icon="i-lucide-log-in" label="Sign in" class="flex-1 justify-center" />
+          <UButton v-if="flags.public_registration !== false" to="/register" label="Create account" class="flex-1 justify-center" />
+        </div>
+      </template>
+    </UHeader>
+    <UMain class="flex-1">
+      <slot />
+    </UMain>
+    <UFooter :ui="{ root: 'no-print' }">
+      <template #left>
+        <p class="text-sm text-muted">
+          © {{ new Date().getFullYear() }} Kadiria · Estimates are indicative; confirm with a registered quantity surveyor.
+        </p>
+      </template>
+      <template #right>
+        <ULink to="/standards" class="text-sm text-muted hover:text-default">
+          Measurement & rules
+        </ULink>
+      </template>
+    </UFooter>
+  </div>
+
+  <!-- Workspace (signed in) -->
+  <UDashboardGroup v-else unit="rem" storage="local">
     <UDashboardSidebar id="main" collapsible resizable :ui="{ footer: 'border-t border-default', root: 'no-print' }">
       <template #header="{ collapsed }">
         <AppLogo :collapsed="collapsed" />
