@@ -24,6 +24,7 @@ export const projectSchema = z.object({
   buildingTypeKey: z.string().nullable().default(null),
   finishKey: z.string().nullable().default(null),
   currency: z.string().regex(/^[A-Z]{3}$/).default('KES'),
+  measurementStandard: z.string().trim().regex(/^[a-z0-9_]{1,60}$/).default('smm_ea'),
   params: paramsSchema.optional(),
   prerequisites: z.record(z.string(), prereqStatus).default({}),
   contingencyPercent: z.coerce.number().min(0).max(50).default(5),

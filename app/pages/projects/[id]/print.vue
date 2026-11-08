@@ -16,6 +16,8 @@ function printNow() {
 }
 
 const bills = computed(() => (p.value?.bills ?? []).filter(b => b.items.length))
+/** Short label of the method of measurement for item references, e.g. 'SMM' or 'CESMM4' */
+const stdShort = computed(() => (p.value?.measurement?.code ?? 'SMM').split(' ')[0])
 const issuedLabel = computed(() => doc.value ? `Issued ${new Date(doc.value.issuedAt).toLocaleDateString('en-KE', { dateStyle: 'long' })}${doc.value.snapshot.issuedByName ? ` by ${doc.value.snapshot.issuedByName}` : ''}` : (p.value?.status === 'issued' ? 'Issued' : 'DRAFT: not issued'))
 </script>
 
@@ -64,7 +66,9 @@ const issuedLabel = computed(() => doc.value ? `Issued ${new Date(doc.value.issu
           </dl>
         </div>
         <p class="text-xs text-neutral-500">
-          Measured generally in accordance with the Standard Method of Measurement of Building Works for East Africa. Rates in {{ p.currency }}.
+          {{ p.measurement?.coverNote || 'Measured generally in accordance with the Standard Method of Measurement of Building Works for East Africa.' }}
+          <template v-if="p.measurement">Item references such as "{{ stdShort }} F" are sections of that standard.</template>
+          Rates in {{ p.currency }}.
         </p>
       </section>
 
@@ -127,7 +131,10 @@ const issuedLabel = computed(() => doc.value ? `Issued ${new Date(doc.value.issu
                 </td>
               </tr>
               <tr>
-                <td>{{ bill.number }}.{{ i + 1 }}</td>
+                <td>
+                  {{ bill.number }}.{{ i + 1 }}
+                  <span v-if="item.measureRef" class="block text-[9px] leading-tight text-neutral-500" :title="item.measureRef.title">{{ stdShort }} {{ item.measureRef.code }}</span>
+                </td>
                 <td>
                   {{ item.description }}
                   <em v-if="item.itemType !== 'measured'" class="text-xs"> ({{ ITEM_TYPE_LABELS[item.itemType] }})</em>

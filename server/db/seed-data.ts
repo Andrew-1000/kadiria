@@ -303,3 +303,98 @@ export const LIBRARY: Lib[] = [
   ['PRO-130', 'provisional', 'Provisional sums', 'Statutory approvals, NCA and NEMA fees', 'Sum', 150000, 'provisional', 'lump', 1, false, false],
   ['PRO-140', 'provisional', 'Provisional sums', 'Excavation in rock and dewatering (to be remeasured)', 'Sum', 100000, 'provisional', 'lump', 1, false, false]
 ]
+
+/* ------------------------------------------------------------------ */
+/* Methods of measurement                                              */
+/* ------------------------------------------------------------------ */
+
+export const STANDARDS = [
+  {
+    key: 'smm_ea', code: 'SMM (East Africa)', name: 'Standard Method of Measurement of Building Works for East Africa', scope: 'building',
+    edition: '2nd edition, 2008', publisher: 'Architectural Association of Kenya, Quantity Surveyors Chapter',
+    coverNote: 'Measured generally in accordance with the Standard Method of Measurement of Building Works for East Africa (2nd edition, 2008).', sort: 1
+  },
+  {
+    key: 'cesmm4', code: 'CESMM4', name: 'Civil Engineering Standard Method of Measurement, fourth edition', scope: 'civil',
+    edition: '4th edition, 2012', publisher: 'Institution of Civil Engineers (ICE)',
+    coverNote: 'Measured in accordance with the Civil Engineering Standard Method of Measurement, fourth edition (CESMM4).', sort: 2
+  }
+]
+
+/**
+ * SMM for East Africa: sections in the order of the 2008 edition's contents. Letters are assigned in
+ * that order (Excavation and earthwork = D, as in the edition); check them against your copy and
+ * correct them in Admin → Measurement standards if they differ.
+ */
+export const SMM_SECTIONS: [code: string, title: string, guidance: string][] = [
+  ['A', 'General rules', 'Units, classification and descriptions. Work is measured net as fixed in position; dimensions to the nearest 10 mm.'],
+  ['B', 'Preliminaries', 'Contract conditions, site establishment, plant, supervision, insurances; prime cost and provisional sums.'],
+  ['C', 'Demolitions and alterations', 'Demolishing structures, cutting openings, making good; generally itemised.'],
+  ['D', 'Excavation and earthwork', 'Site clearance (m²), excavation in stated maximum depth stages from stated starting level (m³), disposal, filling and hardcore (m³ or m² stating thickness), anti-termite treatment.'],
+  ['E', 'Piling', 'Piles by number and length, stating type and size.'],
+  ['F', 'Concrete work', 'Concrete by mix and location (m³), formwork to stated surfaces (m²), reinforcement bars (kg) and fabric (m²), membranes.'],
+  ['G', 'Walling', 'Stone, block and brick walling stating thickness (m²); damp-proof courses (m); walling reinforcement (m).'],
+  ['H', 'Underpinning', 'Excavation, concrete and walling to underpin existing foundations.'],
+  ['I', 'Asphalt work', 'Tanking, roofing and paving in asphalt (m²).'],
+  ['J', 'Roofing', 'Roof coverings, ridges, flashings (m² / m); rainwater goods where not under plumbing.'],
+  ['K', 'Carpentry', 'Structural timber: trusses, purlins, wall plates, fascias (m / nr).'],
+  ['L', 'Joinery', 'Doors, frames, windows, fittings in timber (nr / m²).'],
+  ['M', 'Structural steelwork', 'Steel frames and members (tonnes), stating sections.'],
+  ['N', 'Metalwork', 'Steel windows and doors, burglar-proofing, balustrades (nr / m²).'],
+  ['O', 'Plumbing and engineering installations', 'Water supply, sanitary pipework, rainwater goods, tanks (m / nr).'],
+  ['P', 'Mechanical engineering installations', 'Heating, ventilation and other mechanical services.'],
+  ['Q', 'Electrical installations', 'Wiring, conduits, switches, sockets, distribution boards and fittings (points / nr).'],
+  ['R', 'Floor, wall and ceiling finishings', 'Plaster, render, screeds, tiling and ceilings, stating thickness and surface (m²).'],
+  ['S', 'Glazing', 'Glass by type and thickness (m²).'],
+  ['T', 'Painting and decorating', 'Paint systems to stated surfaces (m²), stating number of coats.'],
+  ['U', 'Drainage', 'Pipes in trenches (m), manholes, septic tanks and soakaways (nr).'],
+  ['V', 'Landscaping', 'Topsoil, grassing and planting (m² / nr).'],
+  ['W', 'Roadworks', 'Pavings, kerbs and road layers (m² / m).'],
+  ['X', 'Fencing', 'Fences, gates and boundary walls (m / nr).']
+]
+
+/** CESMM4 work classes (Institution of Civil Engineers). */
+export const CESMM_SECTIONS: [code: string, title: string, guidance: string][] = [
+  ['A', 'General items', 'Contractual and specified requirements, method-related charges, provisional sums and prime cost items.'],
+  ['B', 'Ground investigation', 'Trial pits, boreholes, samples, tests.'],
+  ['C', 'Geotechnical and other specialist processes', 'Grouting, diaphragm walls, ground anchors, drainage of the ground.'],
+  ['D', 'Demolition and site clearance', 'General clearance (ha), trees, stumps, buildings and other structures.'],
+  ['E', 'Earthworks', 'Excavation, dredging, filling, disposal and landscaping (m³ / m²).'],
+  ['F', 'In situ concrete', 'Provision of concrete by grade (m³) and placing by member type (m³).'],
+  ['G', 'Concrete ancillaries', 'Formwork (m²), reinforcement (tonnes / m² of fabric), joints, post-tensioning, finishes.'],
+  ['H', 'Precast concrete', 'Beams, slabs, units (nr / m).'],
+  ['I', 'Pipework – pipes', 'Pipes by material, diameter and trench depth (m).'],
+  ['J', 'Pipework – fittings and valves', 'Bends, junctions, valves (nr).'],
+  ['K', 'Pipework – manholes and pipework ancillaries', 'Manholes, chambers, gullies, French drains (nr / m).'],
+  ['L', 'Pipework – supports and protection, ancillaries to laying and excavation', 'Extras to excavation, beds, surrounds, supports.'],
+  ['M', 'Structural metalwork', 'Fabrication and erection of members (tonnes).'],
+  ['N', 'Miscellaneous metalwork', 'Stairways, handrails, ladders, gratings, doors and frames (nr / m / tonnes).'],
+  ['O', 'Timber', 'Components, decking and fittings (m / m²).'],
+  ['P', 'Piles', 'Bored, driven and sheet piles (nr / m).'],
+  ['Q', 'Piling ancillaries', 'Cutting off, testing, backfilling empty bores.'],
+  ['R', 'Roads and pavings', 'Sub-base, bases, surfacing, kerbs, road markings (m² / m).'],
+  ['S', 'Rail track', 'Track foundations, laying and supply.'],
+  ['T', 'Tunnels', 'Excavation, linings and support.'],
+  ['U', 'Brickwork, blockwork and masonry', 'Walls and facings by thickness (m²); surface features.'],
+  ['V', 'Painting', 'Paint systems to stated surfaces (m²).'],
+  ['W', 'Waterproofing', 'Damp proofing, tanking, roofing, protective layers (m²).'],
+  ['X', 'Miscellaneous work', 'Fences, gates, drainage to structures, rock filling, landscaping.'],
+  ['Y', 'Sewer and water main renovation and ancillary works', 'Renovation and preparation of existing sewers and mains.'],
+  ['Z', 'Simple building works incidental to civil engineering works', 'Carpentry, joinery, insulation, windows, doors, finishes and services in small buildings.']
+]
+
+/** Library item → [SMM section, CESMM class]. */
+export const LIBRARY_REFS: Record<string, [smm: string, cesmm: string]> = {
+  'PRE-010': ['B', 'A'], 'PRE-020': ['B', 'A'], 'PRE-030': ['B', 'A'], 'PRE-040': ['B', 'A'], 'PRE-050': ['B', 'A'], 'PRE-060': ['B', 'A'], 'PRE-070': ['B', 'A'],
+  'SUB-010': ['D', 'D'], 'SUB-020': ['D', 'E'], 'SUB-030': ['D', 'E'], 'SUB-040': ['D', 'E'], 'SUB-100': ['D', 'E'], 'SUB-110': ['D', 'E'],
+  'SUB-200': ['F', 'F'], 'SUB-210': ['F', 'F'], 'SUB-220': ['F', 'F'], 'SUB-300': ['F', 'G'], 'SUB-400': ['F', 'G'],
+  'SUB-500': ['G', 'U'], 'SUB-510': ['G', 'W'], 'SUB-600': ['D', 'X'], 'SUB-610': ['F', 'W'], 'SUB-620': ['F', 'G'], 'SUB-630': ['F', 'F'],
+  'SUP-100': ['F', 'F'], 'SUP-110': ['F', 'F'], 'SUP-200': ['F', 'F'], 'SUP-300': ['F', 'G'], 'SUP-400': ['F', 'G'], 'SUP-410': ['F', 'G'], 'SUP-420': ['F', 'G'],
+  'SUP-500': ['G', 'U'], 'SUP-505': ['G', 'U'], 'SUP-510': ['G', 'U'], 'SUP-600': ['F', 'F'],
+  'ROF-100': ['K', 'O'], 'ROF-110': ['J', 'Z'], 'ROF-120': ['K', 'O'], 'ROF-130': ['O', 'Z'],
+  'DW-100': ['N', 'N'], 'DW-110': ['N', 'N'], 'DW-200': ['L', 'Z'], 'DW-210': ['N', 'N'],
+  'FIN-100': ['R', 'Z'], 'FIN-110': ['R', 'Z'], 'FIN-200': ['R', 'Z'], 'FIN-210': ['R', 'Z'], 'FIN-300': ['R', 'Z'], 'FIN-400': ['T', 'V'], 'FIN-410': ['T', 'V'], 'FIN-420': ['T', 'V'],
+  'SER-100': ['Q', 'Z'], 'SER-200': ['O', 'Z'], 'SER-300': ['U', 'K'], 'SER-400': ['O', 'Z'],
+  'EXT-100': ['W', 'R'], 'EXT-110': ['G', 'U'], 'EXT-120': ['V', 'X'],
+  'PRO-110': ['B', 'A'], 'PRO-120': ['B', 'A'], 'PRO-130': ['B', 'A'], 'PRO-140': ['B', 'A']
+}

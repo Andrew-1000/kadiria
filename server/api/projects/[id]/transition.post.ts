@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
         const { id: _b, items, projectId: _p, description: _d, ...billCopy } = bill
         const [nb] = await tx.insert(tables.projectBills).values({ ...billCopy, projectId: newId }).returning()
         if (items.length && nb) {
-          await tx.insert(tables.projectItems).values(items.map(({ id: _i, createdAt: _ic, billId: _bi, projectId: _pi, ...item }) => ({ ...item, billId: nb.id, projectId: newId })))
+          await tx.insert(tables.projectItems).values(items.map(({ id: _i, createdAt: _ic, billId: _bi, projectId: _pi, measureRef: _m, ...item }) => ({ ...item, billId: nb.id, projectId: newId })))
         }
       }
     })

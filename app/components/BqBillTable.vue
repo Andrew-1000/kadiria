@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{ bill: BqBill, currency: string, editable: boolean, projectId: string }>()
+const props = defineProps<{ bill: BqBill, currency: string, editable: boolean, projectId: string, /** Short name of the method of measurement, e.g. 'SMM (East Africa)' */ standardCode?: string }>()
 const emit = defineEmits<{ changed: [], edit: [item: BqItem], add: [billId: string], library: [billId: string] }>()
 const { call } = useApi()
 
@@ -103,6 +103,9 @@ const rows = computed(() => {
                   <UBadge v-if="row.item.itemType !== 'measured'" size="sm" variant="subtle" :color="row.item.itemType === 'pc_sum' ? 'info' : 'warning'" :label="ITEM_TYPE_LABELS[row.item.itemType]" />
                   <UBadge v-if="row.item.source === 'calculator'" size="sm" variant="subtle" color="success" icon="i-lucide-calculator" :label="row.item.calcSnapshot?.module?.name ?? 'Calculator'" />
                   <UBadge v-if="row.item.libraryCode" size="sm" variant="outline" color="neutral" :label="row.item.libraryCode" />
+                  <UTooltip v-if="row.item.measureRef" :text="`Measured under ${standardCode ?? 'the method of measurement'}, section ${row.item.measureRef.code}${row.item.measureRef.title ? `: ${row.item.measureRef.title}` : ''}`">
+                    <UBadge size="sm" variant="subtle" color="primary" icon="i-lucide-ruler" :label="`${(standardCode ?? '').split(' ')[0]} ${row.item.measureRef.code}${row.item.measureRef.title ? ` · ${row.item.measureRef.title}` : ''}`.trim()" />
+                  </UTooltip>
                 </div>
               </td>
               <td>{{ row.item.unit }}</td>

@@ -28,9 +28,16 @@ export async function projectDetail(project: ProjectRow) {
     db.select({ key: t.billTemplates.key, description: t.billTemplates.description }).from(t.billTemplates)
   ])
   const describe = new Map(templates.map(tpl => [tpl.key, tpl.description]))
-  const billsWithItems = bills.map(b => ({ ...b, description: (b.templateKey && describe.get(b.templateKey)) || '', items: items.filter(i => i.billId === b.id) }))
+  // Method of measurement: each library-based item carries its section of the chosen standard
+  const measurement = await measurementFor(project.measurementStandard)
+  const refs = await libraryRefs(measurement.scope)
+  const withRef = (i: typeof items[number]) => {
+    const code = (i.libraryCode && refs.get(i.libraryCode)) || ''
+    return { ...i, measureRef: code ? { code, title: measurement.sections[code] ?? '' } : null }
+  }
+  const billsWithItems = bills.map(b => ({ ...b, description: (b.templateKey && describe.get(b.templateKey)) || '', items: items.filter(i => i.billId === b.id).map(withRef) }))
   const summary = bqSummary(billsWithItems, project.contingencyPercent, project.vatPercent)
-  return { ...project, location, bills: billsWithItems, summary, readiness: readiness(project.prerequisites), documents: docs }
+  return { ...project, location, measurement, bills: billsWithItems, summary, readiness: readiness(project.prerequisites), documents: docs }
 }
 
 export async function assertBill(projectId: string, billId: string) {

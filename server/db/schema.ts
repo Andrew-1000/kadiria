@@ -244,9 +244,44 @@ export const libraryItems = pgTable('library_items', {
   factor: numeric('factor', { precision: 12, scale: 4, mode: 'number' }).notNull().default(1),
   finishSensitive: boolean('finish_sensitive').notNull().default(false),
   includeByDefault: boolean('include_by_default').notNull().default(true),
+  /** Section of the building standard (SMM for East Africa) this item is measured under, e.g. 'F'. */
+  smmRef: text('smm_ref').notNull().default(''),
+  /** Work class of the civil engineering standard (CESMM4), e.g. 'F'. */
+  cesmmRef: text('cesmm_ref').notNull().default(''),
   active: boolean('active').notNull().default(true),
   sort: integer('sort').notNull().default(0)
 })
+
+/* ------------------------------------------------------------------ */
+/* Methods of measurement (SMM for building, CESMM for civil works)    */
+/* ------------------------------------------------------------------ */
+
+/** A standard method of measurement a BQ can be prepared under. */
+export const measurementStandards = pgTable('measurement_standards', {
+  key: text('key').primaryKey(),
+  /** Short name shown in lists, e.g. 'SMM (East Africa)'. */
+  code: text('code').notNull(),
+  name: text('name').notNull(),
+  /** 'building' (SMM) or 'civil' (CESMM): decides which library reference is shown. */
+  scope: text('scope').notNull().default('building'),
+  edition: text('edition').notNull().default(''),
+  publisher: text('publisher').notNull().default(''),
+  /** Sentence printed on the BQ cover, e.g. "Measured in accordance with …". */
+  coverNote: text('cover_note').notNull().default(''),
+  active: boolean('active').notNull().default(true),
+  sort: integer('sort').notNull().default(0)
+})
+
+/** Sections / work classes of a standard, e.g. SMM 'D Excavation and earthwork', CESMM 'E Earthworks'. */
+export const measurementSections = pgTable('measurement_sections', {
+  id: serial('id').primaryKey(),
+  standardKey: text('standard_key').notNull().references(() => measurementStandards.key, { onDelete: 'cascade' }),
+  code: text('code').notNull(),
+  title: text('title').notNull(),
+  /** What it covers and how it is measured (units, key rules). */
+  guidance: text('guidance').notNull().default(''),
+  sort: integer('sort').notNull().default(0)
+}, t => [uniqueIndex('measurement_sections_std_code_idx').on(t.standardKey, t.code)])
 
 /* ------------------------------------------------------------------ */
 /* Projects & Bills of Quantities                                      */
@@ -266,6 +301,8 @@ export const projects = pgTable('projects', {
   buildingTypeKey: text('building_type_key').references(() => buildingTypes.key, { onDelete: 'set null' }),
   finishKey: text('finish_key').references(() => finishLevels.key, { onDelete: 'set null' }),
   currency: text('currency').notNull().default('KES'),
+  /** Method of measurement the BQ is prepared under (measurement_standards.key). */
+  measurementStandard: text('measurement_standard').notNull().default('smm_ea'),
   status: projectStatus('status').notNull().default('draft'),
   params: jsonb('params').$type<Record<string, unknown>>().notNull().default({}),
   prerequisites: jsonb('prerequisites').$type<Record<string, string>>().notNull().default({}),

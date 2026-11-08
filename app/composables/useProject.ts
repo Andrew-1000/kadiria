@@ -9,6 +9,8 @@ export interface BqItem {
   itemType: 'measured' | 'provisional' | 'pc_sum' | 'lump_sum'
   source: string
   libraryCode: string | null
+  /** Section of the BQ's method of measurement this item is measured under (from the library). */
+  measureRef?: { code: string, title: string } | null
   calcSnapshot: null | { module?: { name: string }, materials?: { label: string, quantity: number, unit: string, amount: number | null }[], materialsTotal?: number }
   notes: string
   sort: number
@@ -40,6 +42,8 @@ export interface ProjectDetail {
   buildingTypeKey: string | null
   finishKey: string | null
   currency: string
+  measurementStandard: string
+  measurement?: { key: string, code: string, name: string, scope: 'building' | 'civil', edition: string, publisher: string, coverNote: string, sections: Record<string, string> }
   status: 'draft' | 'submitted' | 'approved' | 'issued'
   params: Record<string, unknown> & { floorAreas?: number[] }
   prerequisites: Record<string, string>

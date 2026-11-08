@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   const [project] = await useDb().insert(tables.projects).values({
     id, lineageId: id, ownerId: user.id,
     name: body.name, client: body.client, siteAddress: body.siteAddress, preparedBy: body.preparedBy || user.name,
-    locationId: body.locationId, buildingTypeKey: body.buildingTypeKey, finishKey: body.finishKey, currency: body.currency,
+    locationId: body.locationId, buildingTypeKey: body.buildingTypeKey, finishKey: body.finishKey, currency: body.currency, measurementStandard: body.measurementStandard,
     params: normaliseParams(body.params) as unknown as Record<string, unknown>, prerequisites: body.prerequisites,
     contingencyPercent: body.contingencyPercent, vatPercent: body.vatPercent
   }).returning()

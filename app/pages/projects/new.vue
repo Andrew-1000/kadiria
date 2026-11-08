@@ -32,10 +32,12 @@ const form = reactive({
   locationId: Number(route.query.location) || (undefined as number | undefined),
   buildingTypeKey: String(route.query.type ?? 'bungalow'),
   finishKey: String(route.query.finish ?? 'standard'),
+  measurementStandard: 'smm_ea',
   contingencyPercent: 5,
   vatPercent: config.value?.countries[0]?.vatPercent ?? 16,
   generate: true
 })
+const { data: standards } = await useFetch<{ key: string, code: string, name: string, scope: string, edition: string }[]>('/api/standards', { default: () => [] })
 const params = reactive({ ...DEFAULT_PARAMS, floorAreas: areasFromQuery.length ? areasFromQuery : [...DEFAULT_PARAMS.floorAreas] })
 
 const buildingType = computed(() => config.value?.buildingTypes.find(b => b.key === form.buildingTypeKey))
@@ -198,6 +200,25 @@ async function create() {
                 >
                   <BuildingIcon :type="bt.key" class="h-7 text-primary/80 mb-1" />
                   <span class="font-medium">{{ bt.label }}</span>
+                </button>
+              </div>
+            </UFormField>
+            <UFormField label="Method of measurement" class="sm:col-span-2" help="The standard the BQ is measured under. Each item shows its section of that standard, and the cover states it.">
+              <div class="grid sm:grid-cols-2 gap-2">
+                <button
+                  v-for="m in standards"
+                  :key="m.key"
+                  type="button"
+                  class="rounded-lg border p-3 text-left text-sm"
+                  :class="form.measurementStandard === m.key ? 'border-primary bg-primary/5' : 'border-default'"
+                  :aria-pressed="form.measurementStandard === m.key"
+                  @click="form.measurementStandard = m.key"
+                >
+                  <span class="flex items-center gap-2 font-medium">
+                    <UIcon :name="m.scope === 'civil' ? 'i-lucide-construction' : 'i-lucide-building-2'" class="text-primary" />
+                    {{ m.scope === 'civil' ? 'Civil engineering works' : 'Building works' }} · {{ m.code }}
+                  </span>
+                  <span class="block text-xs text-muted mt-0.5">{{ m.name }}{{ m.edition ? ` (${m.edition})` : '' }}</span>
                 </button>
               </div>
             </UFormField>

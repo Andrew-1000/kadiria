@@ -76,8 +76,21 @@ export const REF_TABLES: Record<string, RefTable> = {
     create: z.object({
       code: z.string().trim().regex(/^[A-Z0-9-]{2,20}$/, 'Code like SUB-100'), billKey: key, section: optText(120).default(''), description: text(500), unit: text(24),
       rate: nonNeg, itemType: z.enum(['measured', 'provisional', 'pc_sum', 'lump_sum']), driver: z.string().default('none'), factor: z.coerce.number().min(0).max(1e6).default(1),
-      finishSensitive: z.boolean().default(false), includeByDefault: z.boolean().default(true), active: z.boolean().default(true), sort: z.coerce.number().int().default(0)
+      finishSensitive: z.boolean().default(false), includeByDefault: z.boolean().default(true), active: z.boolean().default(true), sort: z.coerce.number().int().default(0),
+      smmRef: optText(8).default(''), cesmmRef: optText(8).default('')
     })
+  },
+  standards: {
+    label: 'Measurement standards', table: t.measurementStandards, pk: t.measurementStandards.key, pkType: 'text', orderBy: [t.measurementStandards.sort],
+    create: z.object({
+      key, code: text(60), name: text(200), scope: z.enum(['building', 'civil']), edition: optText(80).default(''), publisher: optText(160).default(''),
+      coverNote: optText(400).default(''), active: z.boolean().default(true), sort: z.coerce.number().int().default(0)
+    }),
+    immutable: ['key']
+  },
+  sections: {
+    label: 'Measurement sections', table: t.measurementSections, pk: t.measurementSections.id, pkType: 'int', orderBy: [t.measurementSections.standardKey, t.measurementSections.sort],
+    create: z.object({ standardKey: key, code: z.string().trim().regex(/^[A-Z0-9.]{1,8}$/, 'Code like D or 4.2'), title: text(160), guidance: optText(600).default(''), sort: z.coerce.number().int().default(0) })
   },
   constants: {
     label: 'Calculator constants', table: t.calcConstants, pk: t.calcConstants.key, pkType: 'text', orderBy: [t.calcConstants.sort],

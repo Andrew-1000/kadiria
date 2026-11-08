@@ -66,8 +66,25 @@ for (const [locationName, key, price] of d.LOCATION_PRICES) {
 
 // BQ library
 await db.insert(s.libraryItems).values(d.LIBRARY.map(([code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault], i) => ({
-  code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault, sort: i + 1
+  code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault, sort: i + 1,
+  smmRef: d.LIBRARY_REFS[code]?.[0] ?? '', cesmmRef: d.LIBRARY_REFS[code]?.[1] ?? ''
 }))).onConflictDoNothing()
+
+// Methods of measurement: SMM (building) and CESMM4 (civil), with their sections
+await db.insert(s.measurementStandards).values(d.STANDARDS).onConflictDoNothing()
+const sectionRows = [
+  ...d.SMM_SECTIONS.map(([code, title, guidance], i) => ({ standardKey: 'smm_ea', code, title, guidance, sort: i + 1 })),
+  ...d.CESMM_SECTIONS.map(([code, title, guidance], i) => ({ standardKey: 'cesmm4', code, title, guidance, sort: i + 1 }))
+]
+await db.insert(s.measurementSections).values(sectionRows).onConflictDoNothing()
+// Existing libraries (seeded before references existed): fill in references that are still blank
+let refsFilled = 0
+for (const [code, [smm, cesmm]] of Object.entries(d.LIBRARY_REFS)) {
+  const a = await db.update(s.libraryItems).set({ smmRef: smm }).where(and(eq(s.libraryItems.code, code), eq(s.libraryItems.smmRef, ''))).returning({ id: s.libraryItems.id })
+  const b = await db.update(s.libraryItems).set({ cesmmRef: cesmm }).where(and(eq(s.libraryItems.code, code), eq(s.libraryItems.cesmmRef, ''))).returning({ id: s.libraryItems.id })
+  refsFilled += a.length + b.length
+}
+if (refsFilled) console.log(`✔ ${refsFilled} measurement reference(s) added to library items`)
 
 // First administrator (same scrypt format as nuxt-auth-utils' hashPassword)
 const email = process.env.SEED_ADMIN_EMAIL

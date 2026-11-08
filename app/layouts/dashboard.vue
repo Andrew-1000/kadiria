@@ -19,6 +19,7 @@ const admin = computed<NavigationMenuItem[]>(() => user.value?.role !== 'admin'
       { label: 'Materials & prices', icon: 'i-lucide-package', to: '/admin/materials' },
       { label: 'Calculator settings', icon: 'i-lucide-sliders-horizontal', to: '/admin/calculators' },
       { label: 'BQ library', icon: 'i-lucide-library', to: '/admin/library' },
+      { label: 'Methods of measurement', icon: 'i-lucide-ruler', to: '/admin/standards' },
       { label: 'Estimate requests', icon: 'i-lucide-inbox', to: '/admin/leads' },
       { label: 'Website enquiries', icon: 'i-lucide-mail', to: '/admin/enquiries' },
       { label: 'Users', icon: 'i-lucide-users', to: '/admin/users' },
