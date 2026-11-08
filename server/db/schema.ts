@@ -244,10 +244,6 @@ export const libraryItems = pgTable('library_items', {
   factor: numeric('factor', { precision: 12, scale: 4, mode: 'number' }).notNull().default(1),
   finishSensitive: boolean('finish_sensitive').notNull().default(false),
   includeByDefault: boolean('include_by_default').notNull().default(true),
-  /** Section of the building standard (SMM for East Africa) this item is measured under, e.g. 'F'. */
-  smmRef: text('smm_ref').notNull().default(''),
-  /** Work class of the civil engineering standard (CESMM4), e.g. 'F'. */
-  cesmmRef: text('cesmm_ref').notNull().default(''),
   active: boolean('active').notNull().default(true),
   sort: integer('sort').notNull().default(0)
 })
@@ -282,6 +278,43 @@ export const measurementSections = pgTable('measurement_sections', {
   guidance: text('guidance').notNull().default(''),
   sort: integer('sort').notNull().default(0)
 }, t => [uniqueIndex('measurement_sections_std_code_idx').on(t.standardKey, t.code)])
+
+/** Measurement rules of a standard: what is measured, in which unit, and how. Paraphrased, with the source. */
+export const measurementRules = pgTable('measurement_rules', {
+  id: serial('id').primaryKey(),
+  standardKey: text('standard_key').notNull().references(() => measurementStandards.key, { onDelete: 'cascade' }),
+  sectionCode: text('section_code').notNull(),
+  /** Clause or pay item reference in the standard, e.g. 'GI 6' or '36.01'. */
+  ref: text('ref').notNull().default(''),
+  item: text('item').notNull(),
+  unit: text('unit').notNull().default(''),
+  rule: text('rule').notNull().default(''),
+  source: text('source').notNull().default(''),
+  sort: integer('sort').notNull().default(0)
+}, t => [index('measurement_rules_std_idx').on(t.standardKey, t.sectionCode)])
+
+/** Which section of each standard a library item is measured under. */
+export const libraryMeasureRefs = pgTable('library_measure_refs', {
+  id: serial('id').primaryKey(),
+  libraryCode: text('library_code').notNull().references(() => libraryItems.code, { onDelete: 'cascade', onUpdate: 'cascade' }),
+  standardKey: text('standard_key').notNull().references(() => measurementStandards.key, { onDelete: 'cascade' }),
+  sectionCode: text('section_code').notNull()
+}, t => [uniqueIndex('library_measure_refs_idx').on(t.libraryCode, t.standardKey)])
+
+/** Laws, regulations, tender documents and specifications that govern BQs and measurement in Kenya. */
+export const measurementReferences = pgTable('measurement_references', {
+  key: text('key').primaryKey(),
+  title: text('title').notNull(),
+  /** law | regulation | template | specification | standard | register | guide */
+  kind: text('kind').notNull().default('guide'),
+  issuer: text('issuer').notNull().default(''),
+  year: text('year').notNull().default(''),
+  url: text('url').notNull().default(''),
+  summary: text('summary').notNull().default(''),
+  /** Why it matters for a BQ */
+  relevance: text('relevance').notNull().default(''),
+  sort: integer('sort').notNull().default(0)
+})
 
 /* ------------------------------------------------------------------ */
 /* Projects & Bills of Quantities                                      */

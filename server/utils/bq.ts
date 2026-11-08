@@ -30,7 +30,7 @@ export async function projectDetail(project: ProjectRow) {
   const describe = new Map(templates.map(tpl => [tpl.key, tpl.description]))
   // Method of measurement: each library-based item carries its section of the chosen standard
   const measurement = await measurementFor(project.measurementStandard)
-  const refs = await libraryRefs(measurement.scope)
+  const refs = await libraryRefs(measurement.key)
   const withRef = (i: typeof items[number]) => {
     const code = (i.libraryCode && refs.get(i.libraryCode)) || ''
     return { ...i, measureRef: code ? { code, title: measurement.sections[code] ?? '' } : null }

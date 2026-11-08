@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 
 /** Built-in fallback when the standards tables are empty (database not re-seeded yet). */
 const FALLBACK = {
@@ -42,9 +42,20 @@ export async function measurementFor(standardKey: string): Promise<MeasurementIn
   }
 }
 
-/** Library code → section reference under the given scope (SMM for building, CESMM for civil). */
-export async function libraryRefs(scope: 'building' | 'civil') {
+/** Library code → section reference under the given standard. */
+export async function libraryRefs(standardKey: string) {
   const t = tables
-  const rows = await useDb().select({ code: t.libraryItems.code, smm: t.libraryItems.smmRef, cesmm: t.libraryItems.cesmmRef }).from(t.libraryItems)
-  return new Map(rows.map(r => [r.code, scope === 'civil' ? r.cesmm : r.smm]))
+  const rows = await useDb().select({ code: t.libraryMeasureRefs.libraryCode, section: t.libraryMeasureRefs.sectionCode })
+    .from(t.libraryMeasureRefs).where(eq(t.libraryMeasureRefs.standardKey, standardKey))
+  return new Map(rows.map(r => [r.code, r.section]))
+}
+
+/** A section of a standard with its measurement rules (for the BQ editor's rules popover). */
+export async function sectionRules(standardKey: string, sectionCode: string) {
+  const t = tables
+  const db = useDb()
+  const [section] = await db.select().from(t.measurementSections).where(and(eq(t.measurementSections.standardKey, standardKey), eq(t.measurementSections.code, sectionCode)))
+  const rules = await db.select({ ref: t.measurementRules.ref, item: t.measurementRules.item, unit: t.measurementRules.unit, rule: t.measurementRules.rule, source: t.measurementRules.source })
+    .from(t.measurementRules).where(and(eq(t.measurementRules.standardKey, standardKey), eq(t.measurementRules.sectionCode, sectionCode))).orderBy(asc(t.measurementRules.sort))
+  return { code: sectionCode, title: section?.title ?? '', guidance: section?.guidance ?? '', rules }
 }

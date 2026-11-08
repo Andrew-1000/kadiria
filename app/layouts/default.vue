@@ -33,11 +33,14 @@ const workspace = computed<NavigationMenuItem[]>(() => [
 ])
 
 // The construction guide: stages that aren't a calculator of their own
-const guide = computed<NavigationMenuItem[]>(() => JOURNEY.filter(s => ['prepare', 'bq', 'review', 'build'].includes(s.key)).map(s => ({
-  label: s.key === 'prepare' ? 'What a BQ needs' : s.title,
-  icon: s.icon,
-  to: s.to
-})))
+const guide = computed<NavigationMenuItem[]>(() => [
+  ...JOURNEY.filter(s => ['prepare', 'bq', 'review', 'build'].includes(s.key)).map(s => ({
+    label: s.key === 'prepare' ? 'What a BQ needs' : s.title,
+    icon: s.icon,
+    to: s.to
+  })),
+  { label: 'Measurement & rules', icon: 'i-lucide-ruler', to: '/standards' }
+])
 
 const admin = computed<NavigationMenuItem[]>(() => user.value?.role !== 'admin'
   ? []
@@ -57,7 +60,7 @@ const admin = computed<NavigationMenuItem[]>(() => user.value?.role !== 'admin'
     ])
 
 /** Title in the top bar of pages wrapped by this layout. */
-const TITLES: Record<string, string> = { '/': 'Home', '/estimate': 'Cost calculator', '/calculators': 'Material calculators', '/prepare': 'What a BQ needs', '/login': 'Sign in', '/register': 'Create account' }
+const TITLES: Record<string, string> = { '/': 'Home', '/estimate': 'Cost calculator', '/calculators': 'Material calculators', '/prepare': 'What a BQ needs', '/standards': 'Measurement & rules', '/login': 'Sign in', '/register': 'Create account' }
 const pageTitle = computed(() => TITLES[route.path] ?? (route.path.startsWith('/stage/') ? JOURNEY.find(s => s.to === route.path)?.title ?? 'Construction guide' : 'Kadiria'))
 </script>
 

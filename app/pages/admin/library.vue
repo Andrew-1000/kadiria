@@ -9,11 +9,6 @@ const billFilter = ref('all')
 const filter = computed(() => billFilter.value === 'all' ? undefined : (r: Record<string, unknown>) => r.billKey === billFilter.value)
 const itemTypes = Object.entries(ITEM_TYPE_LABELS).map(([value, label]) => ({ value, label }))
 const drivers = Object.entries(DRIVERS).map(([value, label]) => ({ value, label }))
-// Section references under each method of measurement (Admin → Methods of measurement)
-const { data: sections } = await useFetch<{ standardKey: string, code: string, title: string }[]>('/api/admin/ref/sections', { default: () => [], server: false })
-const sectionOptions = (std: string) => [{ label: '—', value: '' }, ...sections.value.filter(s => s.standardKey === std).map(s => ({ label: `${s.code} · ${s.title}`, value: s.code }))]
-const smmOptions = computed(() => sectionOptions('smm_ea'))
-const cesmmOptions = computed(() => sectionOptions('cesmm4'))
 </script>
 
 <template>
@@ -27,7 +22,7 @@ const cesmmOptions = computed(() => sectionOptions('cesmm4'))
         variant="subtle"
         icon="i-lucide-info"
         title="How library items become a draft BQ"
-        description="Each item's quantity is its driver × factor (e.g. foundation length × 0.12 = m³ of strip footing). Rates are Nairobi / standard-finish baselines, scaled by the project's location tier and, if finish-sensitive, its finish level. Lump and provisional sums with a driver are priced as rate × driver (e.g. KES 2,500 per m² of floor for electrical)."
+        description="Each item's section under each method of measurement is set in Admin → Methods of measurement → Library references. Each item's quantity is its driver × factor (e.g. foundation length × 0.12 = m³ of strip footing). Rates are Nairobi / standard-finish baselines, scaled by the project's location tier and, if finish-sensitive, its finish level. Lump and provisional sums with a driver are priced as rate × driver (e.g. KES 2,500 per m² of floor for electrical)."
       />
       <AdminRefTable
         :key="billFilter"
@@ -40,8 +35,6 @@ const cesmmOptions = computed(() => sectionOptions('cesmm4'))
           { key: 'section', label: 'Section', formOnly: true },
           { key: 'description', label: 'Description', type: 'textarea' },
           { key: 'unit', label: 'Unit' },
-          { key: 'smmRef', label: 'SMM ref', type: 'select', options: smmOptions },
-          { key: 'cesmmRef', label: 'CESMM ref', type: 'select', options: cesmmOptions },
           { key: 'rate', label: 'Rate', type: 'number' },
           { key: 'itemType', label: 'Type', type: 'select', options: itemTypes, formOnly: true },
           { key: 'driver', label: 'Driver', type: 'select', options: drivers },

@@ -76,8 +76,7 @@ export const REF_TABLES: Record<string, RefTable> = {
     create: z.object({
       code: z.string().trim().regex(/^[A-Z0-9-]{2,20}$/, 'Code like SUB-100'), billKey: key, section: optText(120).default(''), description: text(500), unit: text(24),
       rate: nonNeg, itemType: z.enum(['measured', 'provisional', 'pc_sum', 'lump_sum']), driver: z.string().default('none'), factor: z.coerce.number().min(0).max(1e6).default(1),
-      finishSensitive: z.boolean().default(false), includeByDefault: z.boolean().default(true), active: z.boolean().default(true), sort: z.coerce.number().int().default(0),
-      smmRef: optText(8).default(''), cesmmRef: optText(8).default('')
+      finishSensitive: z.boolean().default(false), includeByDefault: z.boolean().default(true), active: z.boolean().default(true), sort: z.coerce.number().int().default(0)
     })
   },
   standards: {
@@ -85,6 +84,25 @@ export const REF_TABLES: Record<string, RefTable> = {
     create: z.object({
       key, code: text(60), name: text(200), scope: z.enum(['building', 'civil']), edition: optText(80).default(''), publisher: optText(160).default(''),
       coverNote: optText(400).default(''), active: z.boolean().default(true), sort: z.coerce.number().int().default(0)
+    }),
+    immutable: ['key']
+  },
+  rules: {
+    label: 'Measurement rules', table: t.measurementRules, pk: t.measurementRules.id, pkType: 'int', orderBy: [t.measurementRules.standardKey, t.measurementRules.sectionCode, t.measurementRules.sort],
+    create: z.object({
+      standardKey: key, sectionCode: z.string().trim().regex(/^[A-Z0-9.]{1,8}$/), ref: optText(40).default(''), item: text(300), unit: optText(24).default(''),
+      rule: optText(1000).default(''), source: optText(300).default(''), sort: z.coerce.number().int().default(0)
+    })
+  },
+  item_refs: {
+    label: 'Library measurement references', table: t.libraryMeasureRefs, pk: t.libraryMeasureRefs.id, pkType: 'int', orderBy: [t.libraryMeasureRefs.standardKey, t.libraryMeasureRefs.libraryCode],
+    create: z.object({ libraryCode: z.string().trim().regex(/^[A-Z0-9-]{2,20}$/), standardKey: key, sectionCode: z.string().trim().regex(/^[A-Z0-9.]{1,8}$/) })
+  },
+  references: {
+    label: 'Policies & references', table: t.measurementReferences, pk: t.measurementReferences.key, pkType: 'text', orderBy: [t.measurementReferences.sort],
+    create: z.object({
+      key, title: text(300), kind: z.enum(['law', 'regulation', 'template', 'specification', 'standard', 'register', 'guide']), issuer: optText(200).default(''), year: optText(40).default(''),
+      url: z.union([z.literal(''), z.string().trim().url().max(500)]).default(''), summary: optText(1500).default(''), relevance: optText(400).default(''), sort: z.coerce.number().int().default(0)
     }),
     immutable: ['key']
   },

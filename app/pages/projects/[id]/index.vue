@@ -221,6 +221,7 @@ const nonEmptyBills = computed(() => project.value?.bills.filter(b => b.items.le
             :editable="editable"
             :project-id="project.id"
             :standard-code="project.measurement?.code"
+            :standard-key="project.measurement?.key"
             @changed="refresh"
             @add="addItem"
             @edit="editItem"

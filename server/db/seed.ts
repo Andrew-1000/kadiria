@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as s from './schema'
 import * as d from './seed-data'
+import * as m from './seed-measurement'
 import { MODULES } from '../../shared/calc/modules'
 import { connectionOptions } from './connection'
 
@@ -66,25 +67,36 @@ for (const [locationName, key, price] of d.LOCATION_PRICES) {
 
 // BQ library
 await db.insert(s.libraryItems).values(d.LIBRARY.map(([code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault], i) => ({
-  code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault, sort: i + 1,
-  smmRef: d.LIBRARY_REFS[code]?.[0] ?? '', cesmmRef: d.LIBRARY_REFS[code]?.[1] ?? ''
+  code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault, sort: i + 1
 }))).onConflictDoNothing()
 
-// Methods of measurement: SMM (building) and CESMM4 (civil), with their sections
-await db.insert(s.measurementStandards).values(d.STANDARDS).onConflictDoNothing()
-const sectionRows = [
-  ...d.SMM_SECTIONS.map(([code, title, guidance], i) => ({ standardKey: 'smm_ea', code, title, guidance, sort: i + 1 })),
-  ...d.CESMM_SECTIONS.map(([code, title, guidance], i) => ({ standardKey: 'cesmm4', code, title, guidance, sort: i + 1 }))
-]
+// Methods of measurement: standards, sections, rules, library references and policies (add-only)
+await db.insert(s.measurementStandards).values([...d.STANDARDS, ...m.EXTRA_STANDARDS]).onConflictDoNothing()
+const sectionRows = ([['smm_ea', d.SMM_SECTIONS], ['cesmm4', d.CESMM_SECTIONS], ['aaqs_2015', m.AAQS_SECTIONS], ['kenya_roads_2023', m.ROADS_SECTIONS]] as const)
+  .flatMap(([standardKey, list]) => list.map(([code, title, guidance], i) => ({ standardKey, code, title, guidance, sort: i + 1 })))
 await db.insert(s.measurementSections).values(sectionRows).onConflictDoNothing()
-// Existing libraries (seeded before references existed): fill in references that are still blank
-let refsFilled = 0
-for (const [code, [smm, cesmm]] of Object.entries(d.LIBRARY_REFS)) {
-  const a = await db.update(s.libraryItems).set({ smmRef: smm }).where(and(eq(s.libraryItems.code, code), eq(s.libraryItems.smmRef, ''))).returning({ id: s.libraryItems.id })
-  const b = await db.update(s.libraryItems).set({ cesmmRef: cesmm }).where(and(eq(s.libraryItems.code, code), eq(s.libraryItems.cesmmRef, ''))).returning({ id: s.libraryItems.id })
-  refsFilled += a.length + b.length
+// Rules: only for standards that have none yet (so admin edits and deletions are kept)
+let rulesAdded = 0
+for (const key of [...new Set(m.RULES.map(r => r.standardKey))]) {
+  const [existing] = await db.select({ id: s.measurementRules.id }).from(s.measurementRules).where(eq(s.measurementRules.standardKey, key)).limit(1)
+  if (existing) continue
+  const rows = m.RULES.filter(r => r.standardKey === key).map((r, i) => ({ ...r, sort: i + 1 }))
+  for (let i = 0; i < rows.length; i += 100) await db.insert(s.measurementRules).values(rows.slice(i, i + 100))
+  rulesAdded += rows.length
 }
-if (refsFilled) console.log(`✔ ${refsFilled} measurement reference(s) added to library items`)
+if (rulesAdded) console.log(`✔ ${rulesAdded} measurement rule(s) added`)
+// Library item references for every standard (existing references are left as they are)
+const refRows = [
+  ...Object.entries(d.LIBRARY_REFS).flatMap(([code, [smm, cesmm]]) => [{ libraryCode: code, standardKey: 'smm_ea', sectionCode: smm }, { libraryCode: code, standardKey: 'cesmm4', sectionCode: cesmm }]),
+  ...Object.entries(m.AAQS_REFS).map(([code, sec]) => ({ libraryCode: code, standardKey: 'aaqs_2015', sectionCode: sec })),
+  ...Object.entries(m.ROADS_REFS).map(([code, sec]) => ({ libraryCode: code, standardKey: 'kenya_roads_2023', sectionCode: sec }))
+]
+const libraryCodes = new Set((await db.select({ code: s.libraryItems.code }).from(s.libraryItems)).map(x => x.code))
+const refsAdded = await db.insert(s.libraryMeasureRefs).values(refRows.filter(r => libraryCodes.has(r.libraryCode))).onConflictDoNothing().returning({ id: s.libraryMeasureRefs.id })
+if (refsAdded.length) console.log(`✔ ${refsAdded.length} library measurement reference(s) added`)
+const refsDocs = await db.insert(s.measurementReferences).values(m.REFERENCES).onConflictDoNothing().returning({ key: s.measurementReferences.key })
+if (refsDocs.length) console.log(`✔ ${refsDocs.length} policy / reference document(s) added`)
+
 
 // First administrator (same scrypt format as nuxt-auth-utils' hashPassword)
 const email = process.env.SEED_ADMIN_EMAIL
