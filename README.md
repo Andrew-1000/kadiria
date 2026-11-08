@@ -55,6 +55,7 @@ Sign in with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`, then open **Admin back-
 | `npm run db:generate` | Generate a migration after editing `server/db/schema.ts` |
 | `npm run db:migrate` / `db:seed` / `db:setup` | Apply migrations / seed / both |
 | `npm run db:studio` | Browse the database (Drizzle Studio) |
+| `npm run db:admin` | Create an admin, or reset an admin's password (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) |
 
 ## Deploying: Netlify + Supabase
 

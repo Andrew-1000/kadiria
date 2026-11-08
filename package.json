@@ -16,7 +16,8 @@
     "db:migrate": "tsx server/db/migrate.ts",
     "db:seed": "tsx server/db/seed.ts",
     "db:setup": "npm run db:migrate && npm run db:seed",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:admin": "tsx server/db/admin.ts"
   },
   "dependencies": {
     "@adonisjs/hash": "9.1.1",
