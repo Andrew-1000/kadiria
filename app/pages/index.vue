@@ -3,6 +3,16 @@ import { PREREQUISITES } from '#shared/calc/bq'
 
 const { data: config } = await useBqConfig()
 const { loggedIn } = useUserSession()
+const NuxtLink = resolveComponent('NuxtLink')
+
+/** Visitors can open the stages that have a public tool; signed-in users every stage. */
+const PUBLIC_STAGES: Record<string, string> = { plan: 'Estimate my build', quantify: 'Calculate materials' }
+const stageLink = (s: JourneyStage) => (loggedIn.value || s.key in PUBLIC_STAGES ? s.to : undefined)
+const stageAction = (s: JourneyStage) => (loggedIn.value ? `Open ${s.tool.toLowerCase()}` : PUBLIC_STAGES[s.key] ?? '')
+/** "Architect, structural & MEP engineers, county planning office" → tags */
+const people = (who: string) => who.split(/,s*/).map(w => w.trim()).filter(Boolean)
+  .map(w => (/^often with an? /i.test(w) ? `${w.replace(/^often with an? /i, '')} (optional)` : w))
+  .map(w => w.charAt(0).toUpperCase() + w.slice(1))
 useSeoMeta({ title: 'Kadiria: construction cost, materials & Bills of Quantities' })
 
 const bills = [
@@ -52,36 +62,49 @@ const bills = [
     </UPageSection>
 
     <UPageSection
-      v-if="loggedIn"
       id="journey"
-      title="From idea to building: the construction journey"
-      description="Every tool here belongs to a stage of a real building project. Start where you are; each stage tells you what it is, who is involved and what comes next."
+      :title="loggedIn ? 'From idea to building: the construction journey' : 'Building in six stages'"
+      :description="loggedIn ? 'Every tool here belongs to a stage of a real building project. Start where you are; each stage tells you what it is, who is involved and what comes next.' : 'What is done at each stage of a building project, and who you need for it.'"
       :ui="{ title: 'font-display', container: 'py-10 sm:py-14' }"
     >
       <ol class="relative grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <li v-for="s in JOURNEY" :key="s.key">
-          <NuxtLink :to="s.to" class="group flex h-full flex-col rounded-xl border border-default p-5 transition hover:border-primary/60 hover:bg-elevated/40">
+          <component
+            :is="stageLink(s) ? NuxtLink : 'div'"
+            :to="stageLink(s)"
+            class="group flex h-full flex-col rounded-xl border border-default p-5 transition"
+            :class="stageLink(s) ? 'hover:border-primary/60 hover:bg-elevated/40' : ''"
+          >
             <div class="flex items-center gap-3">
-              <span class="size-9 rounded-full bg-primary text-inverted grid place-items-center font-bold">{{ s.no }}</span>
+              <span class="size-9 shrink-0 rounded-full bg-primary text-inverted grid place-items-center font-bold">{{ s.no }}</span>
               <div>
                 <p class="font-display font-semibold text-highlighted">
                   {{ s.title }}
                 </p>
-                <p class="text-xs text-muted">
+                <p v-if="loggedIn" class="text-xs text-muted">
                   <UIcon :name="s.icon" class="align-[-2px]" /> {{ s.tool }}
                 </p>
               </div>
             </div>
-            <p class="mt-3 text-sm text-muted flex-1">
+            <p class="mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted">
+              What is done
+            </p>
+            <p class="mt-1 text-sm flex-1">
               {{ s.what }}
             </p>
-            <p class="mt-3 text-xs text-dimmed">
-              <b>Who:</b> {{ s.who }}<br><b>You get:</b> {{ s.output }}
+            <p class="mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted">
+              Who you need
             </p>
-            <span class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
-              Open {{ s.tool.toLowerCase() }} <UIcon name="i-lucide-arrow-right" class="transition group-hover:translate-x-1" />
+            <div class="mt-1.5 flex flex-wrap gap-1.5">
+              <UBadge v-for="w in people(s.who)" :key="w" color="primary" variant="subtle" icon="i-lucide-user-round" :label="w" />
+            </div>
+            <p class="mt-4 text-xs text-muted">
+              <span class="font-semibold text-default">You get:</span> {{ s.output }}
+            </p>
+            <span v-if="stageLink(s)" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+              {{ stageAction(s) }} <UIcon name="i-lucide-arrow-right" class="transition group-hover:translate-x-1" />
             </span>
-          </NuxtLink>
+          </component>
         </li>
       </ol>
     </UPageSection>
