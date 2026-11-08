@@ -85,7 +85,7 @@ Kadiria runs on **Netlify**, which deploys automatically on every push to `main`
    - add each website that embeds Kadiria (e.g. `https://andrew-1000.github.io`);
    - set the **Name printed on documents**.
 
-The connection code (`server/db/connection.ts`) turns on SSL for Supabase, disables prepared statements on the transaction pooler and keeps connections low on serverless hosts.
+The connection code (`server/db/connection.ts`) turns on SSL for Supabase, switches a transaction-pooler address (port 6543) to the session pooler on the same host (port 5432, which handles the driver's pipelined queries and transactions reliably), encodes a raw password, and keeps connections low on serverless hosts.
 
 ## How the admin drives accuracy
 
