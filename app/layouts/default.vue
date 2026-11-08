@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+import { STRUCTURE_LIST } from '#shared/calc/structures'
 
 /*
  * The one Kadiria frame: a sidebar with every major page (calculators, BQ projects, the
@@ -26,6 +27,20 @@ const workspace = computed<NavigationMenuItem[]>(() => [
           label: `${i + 1}. ${m.name}`,
           to: { path: '/calculators', query: { module: m.key } },
           active: route.path === '/calculators' && route.query.module === m.key
+        }))
+      }]
+    : []),
+  ...(flags.value.material_calculators !== false
+    ? [{
+        label: 'Other structures',
+        icon: 'i-lucide-shapes',
+        to: '/structures',
+        active: route.path === '/structures',
+        defaultOpen: route.path === '/structures',
+        children: STRUCTURE_LIST.map(s => ({
+          label: s.name,
+          to: { path: '/structures', query: { type: s.key } },
+          active: route.path === '/structures' && (route.query.type ?? STRUCTURE_LIST[0]!.key) === s.key
         }))
       }]
     : []),
@@ -60,7 +75,7 @@ const admin = computed<NavigationMenuItem[]>(() => user.value?.role !== 'admin'
     ])
 
 /** Title in the top bar of pages wrapped by this layout. */
-const TITLES: Record<string, string> = { '/': 'Home', '/estimate': 'Cost calculator', '/calculators': 'Material calculators', '/prepare': 'What a BQ needs', '/standards': 'Measurement & rules', '/login': 'Sign in', '/register': 'Create account' }
+const TITLES: Record<string, string> = { '/': 'Home', '/estimate': 'Cost calculator', '/calculators': 'Material calculators', '/prepare': 'What a BQ needs', '/standards': 'Measurement & rules', '/structures': 'Other structures', '/login': 'Sign in', '/register': 'Create account' }
 const pageTitle = computed(() => TITLES[route.path] ?? (route.path.startsWith('/stage/') ? JOURNEY.find(s => s.to === route.path)?.title ?? 'Construction guide' : 'Kadiria'))
 </script>
 

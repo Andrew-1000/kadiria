@@ -162,3 +162,16 @@ export const MORE_MATERIALS: SeedMaterial[] = [
   { key: 'hardboard', name: 'Hardboard', size: 'standard sheet', unit: 'sheet', category: 'Timber', price: 1150, source: AS('800–1,500') },
   { key: 'flooring_board_6x1', name: 'Timber flooring board 6 in × 1 in', size: '12 ft piece', unit: 'piece', category: 'Timber', price: 575, source: FL('450–700') }
 ]
+
+/**
+ * Materials used by the structure calculators for which no published 2026 price was found. They are
+ * added without a price: set one in Admin → Materials & prices and the calculators use it.
+ */
+export const UNPRICED_MATERIALS: Omit<SeedMaterial, 'price' | 'source'>[] = [
+  { key: 'gate_vehicle', name: 'Steel vehicle gate with posts', size: '3.6 m wide', unit: 'piece', category: 'External works' },
+  { key: 'gate_pedestrian', name: 'Steel pedestrian gate', size: '1.0 m wide', unit: 'piece', category: 'External works' },
+  { key: 'chain_link_m', name: 'Chain link mesh', size: '1.8 m high, per metre', unit: 'm', category: 'External works' },
+  { key: 'barbed_wire_m', name: 'Barbed wire', size: 'per metre (rolls of 200–600 m)', unit: 'm', category: 'External works' },
+  { key: 'kerb_precast_m', name: 'Precast concrete kerb', size: 'per metre', unit: 'm', category: 'External works' },
+  { key: 'socket_13a', name: '13 A switched socket outlet', size: 'twin or single', unit: 'piece', category: 'Electrical' }
+]

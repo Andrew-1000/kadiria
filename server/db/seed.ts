@@ -5,7 +5,7 @@ import postgres from 'postgres'
 import * as s from './schema'
 import * as d from './seed-data'
 import * as m from './seed-measurement'
-import { MORE_MATERIALS } from './data/materials-2026'
+import { MORE_MATERIALS, UNPRICED_MATERIALS } from './data/materials-2026'
 import * as cm from './data/construction-methods'
 import { MODULES } from '../../shared/calc/modules'
 import { connectionOptions, normaliseDatabaseUrl } from './connection'
@@ -58,6 +58,8 @@ for (const [i, { key, name, size, unit, category, kind, price, source }] of [...
   const priced = await db.select({ id: s.materialPrices.id }).from(s.materialPrices).where(and(eq(s.materialPrices.materialId, m.id), isNull(s.materialPrices.locationId))).limit(1)
   if (!priced.length) await db.insert(s.materialPrices).values({ materialId: m.id, price, effectiveFrom: EFFECTIVE, source })
 }
+const unpriced = await db.insert(s.materials).values(UNPRICED_MATERIALS.map((x, i) => ({ ...x, kind: 'material', sort: 900 + i }))).onConflictDoNothing().returning({ id: s.materials.id })
+added += unpriced.length
 if (added) console.log(`✔ ${added} new material(s) added to the catalogue`)
 for (const [locationName, key, price] of d.LOCATION_PRICES) {
   const [loc] = await db.select().from(s.locations).where(eq(s.locations.name, locationName))

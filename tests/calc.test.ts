@@ -208,3 +208,32 @@ describe('extended materials', () => {
     expect(m(pr, 'undercoat')!.quantity).toBeCloseTo(25, 2) // 200 ÷ 8
   })
 })
+
+describe('other structures', () => {
+  it('computes every structure with its default inputs: real, positive quantities and BQ lines', async () => {
+    const { STRUCTURES } = await import('../shared/calc/structures')
+    const ctx = { constants: DEFAULT_CONSTANTS, mixes, wastagePercent: 5 }
+    expect(STRUCTURES.map(s => s.key)).toEqual(['boundary_wall', 'pit_latrine', 'septic_tank', 'soak_pit', 'fence', 'paving', 'tank_stand', 'shed', 'plumbing', 'electrical'])
+    for (const s of STRUCTURES) {
+      const defaults = Object.fromEntries(s.inputs.map(i => [i.key, i.default]))
+      const r = s.compute(defaults, ctx)
+      expect(r.parts.length, s.key).toBeGreaterThan(0)
+      const lines = r.parts.flatMap(p => p.bqLines)
+      expect(lines.length, s.key).toBeGreaterThan(0)
+      for (const l of lines) expect(Number.isFinite(l.quantity) && l.quantity >= 0, `${s.key}: ${l.description}`).toBe(true)
+      for (const m of r.parts.flatMap(p => p.materials)) expect(Number.isFinite(m.quantity) && m.quantity >= 0, `${s.key}: ${m.label}`).toBe(true)
+    }
+  })
+
+  it('sizes a septic tank and a latrine from their inputs', async () => {
+    const { STRUCTURE_MAP } = await import('../shared/calc/structures')
+    const ctx = { constants: DEFAULT_CONSTANTS, mixes, wastagePercent: 5 }
+    const tank = STRUCTURE_MAP.septic_tank!.compute({ length: 2.4, width: 1.2, depth: 1.5 }, ctx)
+    expect(tank.summary[0]!.value).toBeCloseTo(4.32, 2)
+    const latrine = STRUCTURE_MAP.pit_latrine!
+    const defaults = Object.fromEntries(latrine.inputs.map(i => [i.key, i.default]))
+    const two = latrine.compute({ ...defaults, doors: 2 }, ctx)
+    const four = latrine.compute({ ...defaults, doors: 4 }, ctx)
+    expect(four.summary[0]!.value).toBeGreaterThan(two.summary[0]!.value)
+  })
+})
