@@ -91,13 +91,15 @@ export async function buildLeadReport(id: string) {
   const est = await runEstimate(inputs)
   const floorAreas = inputs.floorAreas.slice(0, Math.max(bt.minFloors, Math.min(bt.maxFloors, inputs.floorAreas.length)))
   const mid = (band.minRate + band.maxRate) / 2
-  const auto = autoRate(band, loc.adjustmentPercent, bt.factor)
+  const methodFactor = est.methodFactor ?? 1
+  const auto = autoRate(band, loc.adjustmentPercent, bt.factor * methodFactor)
   const ownRate = inputs.ratePerM2 && inputs.ratePerM2 > 0 ? inputs.ratePerM2 : null
   const chosenAddons = inputs.addonKeys ? addons.filter(a => inputs.addonKeys!.includes(a.key)) : addons.filter(a => a.enabledByDefault)
   const estimatorSteps: ReportStep[] = [
     { label: `Cost band: ${tier.label}, ${finish.label}`, formula: `Admin rate card, effective ${band.effectiveFrom}${band.note ? ` (${band.note})` : ''}: ${currency} ${fmt(band.minRate, 0)} – ${fmt(band.maxRate, 0)} per m²`, value: mid, unit: `${currency}/m² midpoint` },
     { label: 'Location adjustment', formula: `${loc.name}: ${loc.adjustmentPercent >= 0 ? '+' : ''}${loc.adjustmentPercent}%`, value: round(mid * (1 + loc.adjustmentPercent / 100)), unit: `${currency}/m²` },
     { label: 'Building type factor', formula: `${bt.label}: × ${bt.factor}`, value: round(mid * (1 + loc.adjustmentPercent / 100) * bt.factor), unit: `${currency}/m²` },
+    ...(methodFactor !== 1 ? [{ label: 'Construction method factor', formula: `${est.constructionMethod}: × ${methodFactor} (relative to stone / block masonry)`, value: round(mid * (1 + loc.adjustmentPercent / 100) * bt.factor * methodFactor), unit: `${currency}/m²` }] : []),
     { label: 'Auto-selected rate', formula: 'Rounded to the nearest 100', value: auto, unit: `${currency}/m²` },
     ...(ownRate ? [{ label: 'Rate used (requester\'s own figure)', formula: `The requester entered their own rate instead of ${fmt(auto, 0)}`, value: ownRate, unit: `${currency}/m²` }] : []),
     { label: 'Total floor area', formula: floorAreas.map(a => `${fmt(a)} m²`).join(' + '), value: est.totalArea, unit: 'm²' },
@@ -241,7 +243,7 @@ export async function buildLeadReport(id: string) {
     },
     estimator: {
       steps: estimatorSteps,
-      range: { low: est.range.low, high: est.range.high, formula: `Floor area × band min/max (${fmt(band.minRate, 0)} / ${fmt(band.maxRate, 0)}) × location × building factor × (1 + labour) × (1 + add-ons)` },
+      range: { low: est.range.low, high: est.range.high, formula: `Floor area × band min/max (${fmt(band.minRate, 0)} / ${fmt(band.maxRate, 0)}) × location × building factor × method factor × (1 + labour) × (1 + add-ons)` },
       elements: est.elements,
       quotedTotal: (lead.result as { total?: number })?.total ?? null,
       currentTotal: est.total,

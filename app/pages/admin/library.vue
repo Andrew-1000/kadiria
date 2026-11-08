@@ -40,6 +40,7 @@ const drivers = Object.entries(DRIVERS).map(([value, label]) => ({ value, label 
           { key: 'driver', label: 'Driver', type: 'select', options: drivers },
           { key: 'factor', label: 'Factor', type: 'number', step: 0.0001 },
           { key: 'finishSensitive', label: 'Finish-sensitive', type: 'boolean', formOnly: true },
+          { key: 'methods', label: 'Methods', formOnly: true },
           { key: 'includeByDefault', label: 'In drafts', type: 'boolean', inline: true },
           { key: 'sort', label: 'Order', type: 'number', step: 1, formOnly: true },
           { key: 'active', label: 'Active', type: 'boolean', inline: true }

@@ -53,7 +53,7 @@ export async function getModules(includeDisabled = false) {
 /** Everything the public calculators need, in one request. */
 export async function getPublicConfig() {
   const db = useDb()
-  const [flags, countries, tiers, locations, finishes, rates, buildingTypes, addons, elements, mixes, constants, modules] = await Promise.all([
+  const [flags, countries, tiers, locations, finishes, rates, buildingTypes, addons, elements, mixes, constants, modules, methods] = await Promise.all([
     getFlags(),
     db.select().from(t.countries).where(eq(t.countries.active, true)).orderBy(asc(t.countries.sort)),
     db.select().from(t.rateTiers).orderBy(asc(t.rateTiers.sort)),
@@ -65,10 +65,12 @@ export async function getPublicConfig() {
     db.select().from(t.elementSplits).orderBy(asc(t.elementSplits.sort)),
     getMixes(),
     getConstants(),
-    getModules()
+    getModules(),
+    db.select().from(t.constructionMethods).where(eq(t.constructionMethods.active, true)).orderBy(asc(t.constructionMethods.sort))
   ])
   return {
     flags, countries, tiers, locations, finishes, buildingTypes, addons, elements, mixes, constants, modules,
+    methods: methods.map(m => ({ key: m.key, label: m.label, description: m.description, factor: m.factor, maxFloors: m.maxFloors, source: m.source })),
     rates: rates.map(r => ({ tierId: r.tierId, finishKey: r.finishKey, minRate: r.minRate, maxRate: r.maxRate, effectiveFrom: r.effectiveFrom }))
   }
 }

@@ -6,6 +6,7 @@ import * as s from './schema'
 import * as d from './seed-data'
 import * as m from './seed-measurement'
 import { MORE_MATERIALS } from './data/materials-2026'
+import * as cm from './data/construction-methods'
 import { MODULES } from '../../shared/calc/modules'
 import { connectionOptions, normaliseDatabaseUrl } from './connection'
 
@@ -71,6 +72,16 @@ await db.insert(s.libraryItems).values(d.LIBRARY.map(([code, billKey, section, d
   code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault, sort: i + 1
 }))).onConflictDoNothing()
 
+// Construction methods and their BQ library items (add-only; method applicability filled where blank)
+await db.insert(s.constructionMethods).values(cm.CONSTRUCTION_METHODS).onConflictDoNothing()
+const methodItems = await db.insert(s.libraryItems).values(cm.METHOD_LIBRARY.map(([code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault, methods], i) => ({
+  code, billKey, section, description, unit, rate, itemType, driver, factor, finishSensitive, includeByDefault, methods, sort: 500 + i
+}))).onConflictDoNothing().returning({ id: s.libraryItems.id })
+if (methodItems.length) console.log(`✔ ${methodItems.length} construction-method library item(s) added`)
+for (const [code, methods] of Object.entries(cm.LIBRARY_METHODS)) {
+  await db.update(s.libraryItems).set({ methods }).where(and(eq(s.libraryItems.code, code), eq(s.libraryItems.methods, '')))
+}
+
 // Methods of measurement: standards, sections, rules, library references and policies (add-only)
 await db.insert(s.measurementStandards).values([...d.STANDARDS, ...m.EXTRA_STANDARDS]).onConflictDoNothing()
 const sectionRows = ([['smm_ea', d.SMM_SECTIONS], ['cesmm4', d.CESMM_SECTIONS], ['aaqs_2015', m.AAQS_SECTIONS], ['kenya_roads_2023', m.ROADS_SECTIONS]] as const)
@@ -90,7 +101,8 @@ if (rulesAdded) console.log(`✔ ${rulesAdded} measurement rule(s) added`)
 const refRows = [
   ...Object.entries(d.LIBRARY_REFS).flatMap(([code, [smm, cesmm]]) => [{ libraryCode: code, standardKey: 'smm_ea', sectionCode: smm }, { libraryCode: code, standardKey: 'cesmm4', sectionCode: cesmm }]),
   ...Object.entries(m.AAQS_REFS).map(([code, sec]) => ({ libraryCode: code, standardKey: 'aaqs_2015', sectionCode: sec })),
-  ...Object.entries(m.ROADS_REFS).map(([code, sec]) => ({ libraryCode: code, standardKey: 'kenya_roads_2023', sectionCode: sec }))
+  ...Object.entries(m.ROADS_REFS).map(([code, sec]) => ({ libraryCode: code, standardKey: 'kenya_roads_2023', sectionCode: sec })),
+  ...Object.entries(cm.METHOD_LIBRARY_REFS).flatMap(([code, refs]) => Object.entries(refs).map(([standardKey, sectionCode]) => ({ libraryCode: code, standardKey, sectionCode })))
 ]
 const libraryCodes = new Set((await db.select({ code: s.libraryItems.code }).from(s.libraryItems)).map(x => x.code))
 const refsAdded = await db.insert(s.libraryMeasureRefs).values(refRows.filter(r => libraryCodes.has(r.libraryCode))).onConflictDoNothing().returning({ id: s.libraryMeasureRefs.id })

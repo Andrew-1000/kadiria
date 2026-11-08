@@ -43,6 +43,7 @@ export interface ProjectDetail {
   finishKey: string | null
   currency: string
   measurementStandard: string
+  constructionMethod?: string
   measurement?: { key: string, code: string, name: string, scope: 'building' | 'civil', edition: string, publisher: string, coverNote: string, sections: Record<string, string> }
   status: 'draft' | 'submitted' | 'approved' | 'issued'
   params: Record<string, unknown> & { floorAreas?: number[] }

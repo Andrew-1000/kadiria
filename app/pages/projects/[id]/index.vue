@@ -83,11 +83,11 @@ async function savePricing() {
 }
 
 // Details
-const details = reactive({ name: '', client: '', siteAddress: '', preparedBy: '', locationId: undefined as number | undefined, finishKey: '', measurementStandard: 'smm_ea', assumptions: '', exclusions: '' })
+const details = reactive({ name: '', client: '', siteAddress: '', preparedBy: '', locationId: undefined as number | undefined, finishKey: '', measurementStandard: 'smm_ea', constructionMethod: 'masonry', assumptions: '', exclusions: '' })
 const { data: standards } = await useFetch<{ key: string, code: string, name: string, scope: string, edition: string }[]>('/api/standards', { default: () => [] })
 watchEffect(() => {
   const p = project.value
-  if (p) Object.assign(details, { name: p.name, client: p.client, siteAddress: p.siteAddress, preparedBy: p.preparedBy, locationId: p.locationId ?? undefined, finishKey: p.finishKey ?? 'standard', measurementStandard: p.measurementStandard ?? 'smm_ea', assumptions: p.assumptions, exclusions: p.exclusions })
+  if (p) Object.assign(details, { name: p.name, client: p.client, siteAddress: p.siteAddress, preparedBy: p.preparedBy, locationId: p.locationId ?? undefined, finishKey: p.finishKey ?? 'standard', measurementStandard: p.measurementStandard ?? 'smm_ea', constructionMethod: p.constructionMethod ?? 'masonry', assumptions: p.assumptions, exclusions: p.exclusions })
 })
 const savingDetails = ref(false)
 async function saveDetails() {
@@ -327,6 +327,9 @@ const nonEmptyBills = computed(() => project.value?.bills.filter(b => b.items.le
               </UFormField>
               <UFormField label="Finish level">
                 <USelect v-model="details.finishKey" :items="(config?.finishes ?? []).map(f => ({ label: f.label, value: f.key }))" :disabled="!editable" class="w-full" />
+              </UFormField>
+              <UFormField v-if="config?.methods?.length" label="Construction method" class="sm:col-span-2" help="Applies the next time the BQ is regenerated from the wizard.">
+                <USelect v-model="details.constructionMethod" :items="config.methods.map(m => ({ label: m.label, value: m.key }))" :disabled="!editable" class="w-full" />
               </UFormField>
               <UFormField label="Method of measurement" class="sm:col-span-2" help="The standard the BQ is measured under: items show its section references and the printed cover states it.">
                 <USelect v-model="details.measurementStandard" :items="standards.map(m => ({ label: `${m.scope === 'civil' ? 'Civil works' : 'Building works'}: ${m.code}, ${m.name}`, value: m.key }))" :disabled="!editable" class="w-full" />

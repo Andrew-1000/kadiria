@@ -39,6 +39,7 @@ export const estimateSchema = z.object({
   locationId: z.coerce.number().int().positive(),
   buildingTypeKey: z.string(),
   finishKey: z.string(),
+  methodKey: z.string().regex(/^[a-z0-9_]{1,40}$/).default('masonry'),
   floorAreas: z.array(z.coerce.number().min(0).max(100000)).min(1).max(100),
   ratePerM2: z.coerce.number().min(0).max(10_000_000).nullable().optional(),
   addonKeys: z.array(z.string()).optional(),
@@ -53,28 +54,31 @@ export async function runEstimate(body: EstimateBody) {
   const t = tables
   const [loc] = await db.select().from(t.locations).where(eq(t.locations.id, body.locationId))
   if (!loc) notFound('Location')
-  const [[bt], [finish], rates, addons, elements, [tier]] = await Promise.all([
+  const [[bt], [finish], rates, addons, elements, [tier], [method]] = await Promise.all([
     db.select().from(t.buildingTypes).where(eq(t.buildingTypes.key, body.buildingTypeKey)),
     db.select().from(t.finishLevels).where(eq(t.finishLevels.key, body.finishKey)),
     getCurrentCostRates(),
     db.select().from(t.estimateAddons),
     db.select().from(t.elementSplits),
-    db.select().from(t.rateTiers).where(eq(t.rateTiers.id, loc.tierId))
+    db.select().from(t.rateTiers).where(eq(t.rateTiers.id, loc.tierId)),
+    db.select().from(t.constructionMethods).where(eq(t.constructionMethods.key, body.methodKey ?? 'masonry'))
   ])
   if (!bt) notFound('Building type')
+  // Building type × construction method (masonry = 1 when methods aren't set up)
+  const factor = bt.factor * (method?.factor ?? 1)
   if (!finish) notFound('Finish level')
   const band = rates.find(r => r.tierId === loc.tierId && r.finishKey === finish.key)
   if (!band) throw createError({ statusCode: 422, statusMessage: 'No cost rate is configured for this location and finish.' })
   const floorCount = Math.max(bt.minFloors, Math.min(bt.maxFloors, body.floorAreas.length))
   const floors = body.floorAreas.slice(0, floorCount)
-  const auto = autoRate(band, loc.adjustmentPercent, bt.factor)
+  const auto = autoRate(band, loc.adjustmentPercent, factor)
   const chosenAddons = body.addonKeys ? addons.filter(a => body.addonKeys!.includes(a.key)) : addons.filter(a => a.enabledByDefault)
   const result = estimate({
     floorAreas: floors,
     ratePerM2: body.ratePerM2 && body.ratePerM2 > 0 ? body.ratePerM2 : auto,
     band,
     labourPercent: finish.labourPercent,
-    buildingFactor: bt.factor,
+    buildingFactor: factor,
     locationAdjustmentPercent: loc.adjustmentPercent,
     addons: chosenAddons.sort((a, b) => a.sort - b.sort).map(a => ({ key: a.key, label: a.label, percent: a.percent })),
     elements: elements.sort((a, b) => a.sort - b.sort).map(e => ({ key: e.key, label: e.label, percent: e.percent })),
@@ -86,6 +90,8 @@ export async function runEstimate(body: EstimateBody) {
     location: loc.name,
     tier: tier?.label ?? '',
     buildingType: bt.label,
+    constructionMethod: method?.label ?? 'Stone / block masonry',
+    methodFactor: method?.factor ?? 1,
     finish: finish.label,
     labourPercent: finish.labourPercent,
     band: { minRate: band.minRate, maxRate: band.maxRate }

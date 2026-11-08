@@ -33,6 +33,7 @@ const form = reactive({
   buildingTypeKey: String(route.query.type ?? 'bungalow'),
   finishKey: String(route.query.finish ?? 'standard'),
   measurementStandard: 'smm_ea',
+  constructionMethod: String(route.query.method ?? 'masonry'),
   contingencyPercent: 5,
   vatPercent: config.value?.countries[0]?.vatPercent ?? 16,
   generate: true
@@ -200,6 +201,23 @@ async function create() {
                 >
                   <BuildingIcon :type="bt.key" class="h-7 text-primary/80 mb-1" />
                   <span class="font-medium">{{ bt.label }}</span>
+                </button>
+              </div>
+            </UFormField>
+            <UFormField v-if="config.methods?.length" label="Construction method" class="sm:col-span-2" help="Decides the walling, frame and finishes items the BQ is drafted with.">
+              <div class="grid sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                <button
+                  v-for="m in config.methods"
+                  :key="m.key"
+                  type="button"
+                  class="rounded-lg border p-2.5 text-left text-xs"
+                  :class="form.constructionMethod === m.key ? 'border-primary bg-primary/5' : 'border-default'"
+                  :aria-pressed="form.constructionMethod === m.key"
+                  :title="m.description"
+                  @click="form.constructionMethod = m.key"
+                >
+                  <span class="block font-medium text-sm">{{ m.label }}</span>
+                  <span class="block text-muted mt-0.5">{{ m.factor === 1 ? (m.key === 'masonry' ? 'Standard rates' : 'Similar cost') : `× ${m.factor} cost` }} · up to {{ m.maxFloors >= 20 ? 'any' : m.maxFloors }} floor{{ m.maxFloors === 1 ? '' : 's' }}</span>
                 </button>
               </div>
             </UFormField>

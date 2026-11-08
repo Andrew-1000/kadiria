@@ -205,6 +205,24 @@ const refreshConfig = () => refreshNuxtData('bq-config')
           ]"
           @changed="refreshConfig"
         />
+        <AdminRefTable
+          name="methods"
+          pk="key"
+          title="Construction methods"
+          description="Factor multiplies the cost per m² relative to stone / block masonry (1.00). BQ library items list the methods they apply to (BQ library → Methods)."
+          :columns="[
+            { key: 'key', label: 'Key', createOnly: true },
+            { key: 'label', label: 'Label' },
+            { key: 'description', label: 'Description', type: 'textarea', formOnly: true },
+            { key: 'factor', label: 'Factor', type: 'number', step: 0.01 },
+            { key: 'maxFloors', label: 'Usual max floors', type: 'number', step: 1 },
+            { key: 'source', label: 'Basis of the factor', type: 'textarea' },
+            { key: 'sort', label: 'Order', type: 'number', step: 1, formOnly: true },
+            { key: 'active', label: 'Active', type: 'boolean', inline: true }
+          ]"
+          :defaults="{ factor: 1, maxFloors: 2, active: true, sort: 10 }"
+          @changed="refreshConfig"
+        />
       </template>
 
       <template v-else-if="tab === 'addons'">

@@ -76,8 +76,17 @@ export const REF_TABLES: Record<string, RefTable> = {
     create: z.object({
       code: z.string().trim().regex(/^[A-Z0-9-]{2,20}$/, 'Code like SUB-100'), billKey: key, section: optText(120).default(''), description: text(500), unit: text(24),
       rate: nonNeg, itemType: z.enum(['measured', 'provisional', 'pc_sum', 'lump_sum']), driver: z.string().default('none'), factor: z.coerce.number().min(0).max(1e6).default(1),
-      finishSensitive: z.boolean().default(false), includeByDefault: z.boolean().default(true), active: z.boolean().default(true), sort: z.coerce.number().int().default(0)
+      finishSensitive: z.boolean().default(false), includeByDefault: z.boolean().default(true), active: z.boolean().default(true), sort: z.coerce.number().int().default(0),
+      methods: z.string().trim().regex(/^[a-z0-9_,s]*$/, 'Method keys separated by commas, e.g. masonry,issb').max(200).default('')
     })
+  },
+  methods: {
+    label: 'Construction methods', table: t.constructionMethods, pk: t.constructionMethods.key, pkType: 'text', orderBy: [t.constructionMethods.sort],
+    create: z.object({
+      key, label: text(120), description: optText(600).default(''), factor: z.coerce.number().min(0.1).max(5).default(1),
+      maxFloors: z.coerce.number().int().min(1).max(100).default(20), source: optText(600).default(''), active: z.boolean().default(true), sort: z.coerce.number().int().default(0)
+    }),
+    immutable: ['key']
   },
   standards: {
     label: 'Measurement standards', table: t.measurementStandards, pk: t.measurementStandards.key, pkType: 'text', orderBy: [t.measurementStandards.sort],

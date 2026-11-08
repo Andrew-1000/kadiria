@@ -36,6 +36,10 @@ const currency = computed(() => country.value?.currency ?? 'KES')
 const tiers = computed(() => (config.value?.tiers ?? []).filter(t => t.countryCode === countryCode.value))
 const location = computed(() => config.value?.locations.find(l => l.id === locationId.value))
 const buildingType = computed(() => config.value?.buildingTypes.find(b => b.key === buildingTypeKey.value))
+// How it's built: multiplies the cost per m² relative to stone / block masonry
+const methodKey = ref(config.value?.methods?.some(m => m.key === q(query.method)) ? q(query.method)! : 'masonry')
+const method = computed(() => config.value?.methods?.find(m => m.key === methodKey.value))
+const methodFactor = computed(() => method.value?.factor ?? 1)
 const finish = computed(() => config.value?.finishes.find(f => f.key === finishKey.value))
 
 // Location picker: one tab per rate band, towns listed underneath
@@ -54,10 +58,10 @@ function band(tierId: number | undefined, fk: string) {
 const currentBand = computed(() => band(location.value?.tierId, finishKey.value))
 const midpoint = computed(() => currentBand.value ? (currentBand.value.minRate + currentBand.value.maxRate) / 2 : null)
 const auto = computed(() => currentBand.value && location.value && buildingType.value
-  ? autoRate(currentBand.value, location.value.adjustmentPercent, buildingType.value.factor)
+  ? autoRate(currentBand.value, location.value.adjustmentPercent, buildingType.value.factor * methodFactor.value)
   : null)
 const rate = computed(() => useQuotedRate.value && manualRate.value && manualRate.value > 0 ? manualRate.value : auto.value)
-watch([locationId, finishKey, buildingTypeKey], () => { manualRate.value = null; useQuotedRate.value = false })
+watch([locationId, finishKey, buildingTypeKey, methodKey], () => { manualRate.value = null; useQuotedRate.value = false })
 
 // Floors follow the building type's limits
 watch(buildingType, (bt, previous) => {
@@ -92,7 +96,7 @@ const result = computed(() => {
     ratePerM2: rate.value,
     band: currentBand.value,
     labourPercent: finish.value.labourPercent,
-    buildingFactor: buildingType.value.factor,
+    buildingFactor: buildingType.value.factor * methodFactor.value,
     locationAdjustmentPercent: location.value.adjustmentPercent,
     addons: config.value.addons.filter(a => addonKeys.value.includes(a.key)),
     elements: config.value.elements,
@@ -143,6 +147,7 @@ function toggleAddon(key: string) {
 function reset() {
   locationId.value = null
   buildingTypeKey.value = 'bungalow'
+  methodKey.value = 'masonry'
   finishKey.value = 'standard'
   floorAreas.value = [120]
   manualRate.value = null
@@ -165,7 +170,7 @@ async function sendLead() {
       method: 'POST',
       body: {
         ...lead,
-        estimate: { locationId: locationId.value, buildingTypeKey: buildingTypeKey.value, finishKey: finishKey.value, floorAreas: floorAreas.value, ratePerM2: useQuotedRate.value ? manualRate.value : null, addonKeys: addonKeys.value, budget: budget.value }
+        estimate: { locationId: locationId.value, buildingTypeKey: buildingTypeKey.value, methodKey: methodKey.value, finishKey: finishKey.value, floorAreas: floorAreas.value, ratePerM2: useQuotedRate.value ? manualRate.value : null, addonKeys: addonKeys.value, budget: budget.value }
       }
     })
     leadOpen.value = false
@@ -176,7 +181,7 @@ async function sendLead() {
 
 const bqLink = computed(() => ({
   path: '/projects/new',
-  query: { location: locationId.value ?? undefined, type: buildingTypeKey.value, finish: finishKey.value, areas: floorAreas.value.join(',') }
+  query: { location: locationId.value ?? undefined, type: buildingTypeKey.value, method: methodKey.value, finish: finishKey.value, areas: floorAreas.value.join(',') }
 }))
 </script>
 
@@ -299,6 +304,16 @@ const bqLink = computed(() => ({
                     {{ bt.label }}
                   </button>
                 </div>
+              </div>
+
+              <div v-if="config.methods?.length" class="flex flex-wrap items-center gap-2 px-5 pt-3 text-xs">
+                <span class="text-muted">Built with</span>
+                <USelect v-model="methodKey" size="xs" :items="config.methods.map(m => ({ label: m.label, value: m.key }))" class="w-60" aria-label="Construction method" />
+                <span v-if="method && method.factor !== 1" class="font-mono text-muted" :title="method.source">× {{ method.factor }} vs masonry</span>
+                <span v-if="method && floorAreas.length > method.maxFloors" class="text-warning flex items-center gap-1">
+                  <UIcon name="i-lucide-triangle-alert" /> {{ method.label }} is usually up to {{ method.maxFloors }} floor{{ method.maxFloors === 1 ? '' : 's' }}
+                </span>
+                <span v-if="method && methodKey !== 'masonry'" class="w-full text-dimmed">{{ method.description }}</span>
               </div>
 
               <div class="px-2 sm:px-5 pt-2">

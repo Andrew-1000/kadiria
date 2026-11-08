@@ -40,6 +40,12 @@ export async function projectDetail(project: ProjectRow) {
   return { ...project, location, measurement, bills: billsWithItems, summary, readiness: readiness(project.prerequisites), documents: docs }
 }
 
+/** A library item applies to a construction method when its method list is empty or includes it. */
+export function appliesTo(methods: string, method: string) {
+  const list = methods.split(',').map(x => x.trim()).filter(Boolean)
+  return !list.length || list.includes(method || 'masonry')
+}
+
 export async function assertBill(projectId: string, billId: string) {
   const [bill] = await useDb().select({ id: t.projectBills.id }).from(t.projectBills)
     .where(and(eq(t.projectBills.id, billId), eq(t.projectBills.projectId, projectId)))
@@ -126,7 +132,7 @@ export async function generateBq(project: ProjectRow) {
         notes: provisional ? 'All provisional: to be remeasured from structural drawings.' : ''
       }).returning()
       const rows = library
-        .filter(l => l.billKey === tpl.key && (l.includeByDefault || extraCodes.has(l.code)))
+        .filter(l => l.billKey === tpl.key && (l.includeByDefault || extraCodes.has(l.code)) && appliesTo(l.methods, project.constructionMethod))
         .map((l, i) => {
           const line = libraryLine(l, drivers, factors)
           if (l.code === 'SUP-600') line.quantity = Math.max(1, drivers.floors! - 1)

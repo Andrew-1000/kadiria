@@ -13,6 +13,8 @@ export interface PublicConfig {
   mixes: { key: string, name: string, kind: 'concrete' | 'mortar', cement: number, sand: number, ballast: number }[]
   constants: Record<string, number>
   modules: { key: string, name: string, short: string, description: string, billKey: string, icon: string, formula: string[], stage: string, onSite: string, sequence: number, inputs: InputDef[], enabled: boolean, sort: number }[]
+  /** Construction methods (masonry, ISSB, timber frame, LGS / prefab, 3D-printed) with their cost factor. */
+  methods?: { key: string, label: string, description: string, factor: number, maxFloors: number, source: string }[]
 }
 
 /** Shared, cached public configuration (rates, locations, modules...). */

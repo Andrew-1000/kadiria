@@ -147,6 +147,21 @@ export const buildingTypes = pgTable('building_types', {
   sort: integer('sort').notNull().default(0)
 })
 
+/** How a house is built: masonry, ISSB, timber frame, light-gauge steel / prefab, 3D-printed. */
+export const constructionMethods = pgTable('construction_methods', {
+  key: text('key').primaryKey(),
+  label: text('label').notNull(),
+  description: text('description').notNull().default(''),
+  /** Multiplier on the cost per m² relative to stone / block masonry (1.000). */
+  factor: numeric('factor', { precision: 6, scale: 3, mode: 'number' }).notNull().default(1),
+  /** Usual maximum number of storeys for this method (warning only). */
+  maxFloors: integer('max_floors').notNull().default(20),
+  /** Where the factor comes from. */
+  source: text('source').notNull().default(''),
+  active: boolean('active').notNull().default(true),
+  sort: integer('sort').notNull().default(0)
+})
+
 /** Percent add-ons for the homeowner estimator (fees, approvals, contingency). */
 export const estimateAddons = pgTable('estimate_addons', {
   key: text('key').primaryKey(),
@@ -244,6 +259,8 @@ export const libraryItems = pgTable('library_items', {
   factor: numeric('factor', { precision: 12, scale: 4, mode: 'number' }).notNull().default(1),
   finishSensitive: boolean('finish_sensitive').notNull().default(false),
   includeByDefault: boolean('include_by_default').notNull().default(true),
+  /** Construction methods this item applies to, comma-separated (e.g. 'masonry,issb'); empty = all. */
+  methods: text('methods').notNull().default(''),
   active: boolean('active').notNull().default(true),
   sort: integer('sort').notNull().default(0)
 })
@@ -336,6 +353,8 @@ export const projects = pgTable('projects', {
   currency: text('currency').notNull().default('KES'),
   /** Method of measurement the BQ is prepared under (measurement_standards.key). */
   measurementStandard: text('measurement_standard').notNull().default('smm_ea'),
+  /** How the building is built (construction_methods.key). */
+  constructionMethod: text('construction_method').notNull().default('masonry'),
   status: projectStatus('status').notNull().default('draft'),
   params: jsonb('params').$type<Record<string, unknown>>().notNull().default({}),
   prerequisites: jsonb('prerequisites').$type<Record<string, string>>().notNull().default({}),
