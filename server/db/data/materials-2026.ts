@@ -9,6 +9,11 @@ const JH = (range: string) => `JengaHub Nairobi price list, Mar 2026 (KES ${rang
 const BMM = (price: string) => `Buy More Mall price list, Sep 2026 (KES ${price})`
 const AAL = (range: string) => `Aalis Studios interior finishes guide, Mar 2026 (KES ${range})`
 
+const CC = (range: string) => `CarbonCube hardware guide, Oct 2026 (KES ${range})`
+const AS = (range: string) => `Aspax Construction materials costs, 2026 (KES ${range})`
+const FL = (range: string) => `Fundi Link materials prices, Aug 2026 (KES ${range})`
+const BMW = (price: string) => `Buy More Mall wiring price list, Sep 2026 (KES ${price})`
+
 export const MORE_MATERIALS: SeedMaterial[] = [
   // Binders & aggregates
   { key: 'cement_32_5', name: 'Cement 32.5N', size: '50 kg bag', unit: 'bag', category: 'Binders & aggregates', price: 775, source: JH('700–850') },
@@ -78,5 +83,82 @@ export const MORE_MATERIALS: SeedMaterial[] = [
 
   // Waterproofing
   { key: 'polythene_12kg', name: 'Polythene sheeting roll (DPM)', size: '12 kg roll', unit: 'roll', category: 'Waterproofing & treatment', price: 1400, source: BMM('1,400') },
-  { key: 'polythene_25kg', name: 'Polythene sheeting roll (DPM)', size: '25 kg roll', unit: 'roll', category: 'Waterproofing & treatment', price: 2900, source: BMM('2,900') }
+  { key: 'polythene_25kg', name: 'Polythene sheeting roll (DPM)', size: '25 kg roll', unit: 'roll', category: 'Waterproofing & treatment', price: 2900, source: BMM('2,900') },
+
+  // ---- Second batch (CarbonCube, Aspax, Fundi Link, Buy More Mall wiring list) ----
+  // Aggregates & steel
+  { key: 'sand_lorry_7t', name: 'River sand, lorry load', size: '7 tonnes, delivered (Nairobi area)', unit: 'load', category: 'Binders & aggregates', price: 21000, source: FL('18,000–24,000') },
+  { key: 'y32', name: 'Y32 high-yield bar', size: '32 mm × 12 m', unit: 'bar', category: 'Reinforcement', price: 9950, source: CC('7,660–12,250') },
+  { key: 'binding_wire_25kg', name: 'Binding wire', size: '25 kg roll', unit: 'roll', category: 'Reinforcement', price: 4075, source: CC('3,800–4,350') },
+  { key: 'hoop_iron_20kg', name: 'Hoop iron', size: '20 kg roll', unit: 'roll', category: 'Walling', price: 3125, source: CC('3,000–3,250') },
+  { key: 'nails_50kg', name: 'Wire nails, bulk', size: '50 kg (2½–6 in)', unit: 'bag', category: 'Hardware & fixings', price: 7750, source: CC('7,500–8,000') },
+
+  // Roofing & insulation
+  { key: 'sheet_resincot_g30', name: 'Coloured corrugated sheet (Resincot) G30', size: 'per metre length', unit: 'm', category: 'Roofing', price: 540, source: CC('520–560 per m') },
+  { key: 'sheet_box_g30', name: 'Box profile sheet G30', size: 'per metre length', unit: 'm', category: 'Roofing', price: 521, source: CC('430–612 per m') },
+  { key: 'sheet_box_g28', name: 'Box profile sheet G28 (smooth)', size: 'per metre length', unit: 'm', category: 'Roofing', price: 875, source: CC('837–912 per m') },
+  { key: 'sheet_versatile_g30', name: 'Tile-profile (versatile) sheet G30', size: 'per metre length', unit: 'm', category: 'Roofing', price: 680, source: CC('630–730 per m') },
+  { key: 'sheet_versatile_g28', name: 'Tile-profile (versatile) sheet G28', size: 'per metre length', unit: 'm', category: 'Roofing', price: 900, source: CC('842–958 per m') },
+  { key: 'sheet_box_g26', name: 'Industrial box profile sheet G26', size: 'per metre length', unit: 'm', category: 'Roofing', price: 1150, source: CC('1,100–1,200 per m') },
+  { key: 'ridge_flashing_2m', name: 'Ridge, valley or flashing', size: '2 m piece', unit: 'piece', category: 'Roofing', price: 525, source: CC('450–600') },
+  { key: 'pu_roof_panel', name: 'PU insulated roof panel', size: 'per sheet', unit: 'sheet', category: 'Roofing', price: 14850, source: AS('14,700–15,000') },
+  { key: 'insulation_polystyrene', name: 'Polystyrene insulation panel', size: 'wall / roof', unit: 'm²', category: 'Roofing', price: 1150, source: AS('800–1,500 per m²') },
+  { key: 'insulation_fibreglass', name: 'Fibreglass ceiling insulation', size: 'per m²', unit: 'm²', category: 'Roofing', price: 750, source: AS('500–1,000 per m²') },
+
+  // Waterproofing
+  { key: 'torch_on_membrane', name: 'APP torch-on waterproofing membrane', size: '4 mm, 10 × 1 m roll', unit: 'roll', category: 'Waterproofing & treatment', price: 6500, source: CC('6,500, estimate') },
+  { key: 'bitumen_coating_20l', name: 'Bitumen coating (foundations)', size: '20 L bucket', unit: 'bucket', category: 'Waterproofing & treatment', price: 3000, source: AS('2,000–4,000') },
+  { key: 'waterproof_admix_25l', name: 'Waterproofing admixture for concrete and mortar', size: '25 L', unit: 'can', category: 'Waterproofing & treatment', price: 7000, source: CC('6,500–7,500, Sika-1') },
+  { key: 'integral_waterproofer_20l', name: 'Integral liquid waterproofer', size: '20 L', unit: 'can', category: 'Waterproofing & treatment', price: 4900, source: CC('4,800–5,000, Dr Fixit Pidiproof LW+') },
+  { key: 'sbr_latex_20l', name: 'SBR latex bonding and waterproofing agent', size: '20 L', unit: 'can', category: 'Waterproofing & treatment', price: 13000, source: CC('13,000') },
+
+  // Paints by tin (Crown list prices)
+  { key: 'silk_emulsion_4l', name: 'Silk vinyl emulsion, brilliant white', size: '4 L tin', unit: 'tin', category: 'Finishes', price: 3255, source: CC('3,255') },
+  { key: 'silk_emulsion_20l', name: 'Silk vinyl emulsion, brilliant white', size: '20 L tin', unit: 'tin', category: 'Finishes', price: 16268, source: CC('16,268') },
+  { key: 'exterior_emulsion_20l', name: 'Exterior emulsion', size: '20 L tin', unit: 'tin', category: 'Finishes', price: 15086, source: CC('2,870 for 4 L to 15,086 for 20 L, Permaplast') },
+  { key: 'undercoat_4l', name: 'Universal undercoat', size: '4 L tin', unit: 'tin', category: 'Finishes', price: 2585, source: CC('2,585') },
+  { key: 'undercoat_20l', name: 'Universal undercoat', size: '20 L tin', unit: 'tin', category: 'Finishes', price: 16255, source: CC('16,255') },
+  { key: 'gloss_1l', name: 'Super gloss enamel, brilliant white', size: '1 L tin', unit: 'tin', category: 'Finishes', price: 1089, source: CC('1,089') },
+  { key: 'gloss_4l', name: 'Super gloss enamel, brilliant white', size: '4 L tin', unit: 'tin', category: 'Finishes', price: 3729, source: CC('3,729') },
+  { key: 'gloss_20l', name: 'Super gloss enamel, brilliant white', size: '20 L tin', unit: 'tin', category: 'Finishes', price: 18638, source: CC('18,638') },
+
+  // Plumbing & sanitary
+  { key: 'ppr_20', name: 'PPR pipe PN16', size: '20 mm (½″) × 4 m', unit: 'piece', category: 'Plumbing', price: 260, source: CC('220–300 per 4 m') },
+  { key: 'ppr_32', name: 'PPR pipe PN16', size: '32 mm (1″) × 4 m', unit: 'piece', category: 'Plumbing', price: 550, source: CC('500–600 per 4 m') },
+  { key: 'water_tank_1000', name: 'Plastic water tank', size: '1,000 L', unit: 'piece', category: 'Plumbing', price: 6500, source: CC('4,500–8,500') },
+  { key: 'water_tank_2000', name: 'Plastic water tank', size: '1,500–2,000 L', unit: 'piece', category: 'Plumbing', price: 11125, source: CC('8,250–14,000') },
+  { key: 'water_tank_3000', name: 'Plastic water tank', size: '3,000 L', unit: 'piece', category: 'Plumbing', price: 16500, source: CC('14,500–18,500') },
+  { key: 'water_tank_8000', name: 'Plastic water tank', size: '8,000 L', unit: 'piece', category: 'Plumbing', price: 43750, source: CC('32,500–55,000') },
+  { key: 'water_tank_10000', name: 'Plastic water tank', size: '10,000 L', unit: 'piece', category: 'Plumbing', price: 62750, source: CC('45,500–80,000') },
+  { key: 'kitchen_sink_single', name: 'Stainless steel kitchen sink, single bowl', size: 'supply only', unit: 'piece', category: 'Plumbing', price: 8500, source: AS('5,000–12,000') },
+  { key: 'kitchen_sink_double', name: 'Stainless steel kitchen sink, double bowl', size: 'supply only', unit: 'piece', category: 'Plumbing', price: 17500, source: AS('10,000–25,000') },
+  { key: 'shower_basic', name: 'Shower set, basic', size: 'supply only', unit: 'piece', category: 'Plumbing', price: 5500, source: AS('3,000–8,000') },
+  { key: 'instant_shower', name: 'Instant electric shower heater', size: 'standard', unit: 'piece', category: 'Plumbing', price: 2200, source: BMW('2,200') },
+
+  // Electrical
+  { key: 'cable_4_m', name: 'Power cable', size: '4 mm², per metre', unit: 'm', category: 'Electrical', price: 150, source: AS('120–180 per m') },
+  { key: 'cable_6_m', name: 'Power cable', size: '6 mm², per metre', unit: 'm', category: 'Electrical', price: 215, source: AS('180–250 per m') },
+  { key: 'twin_earth_1_0_m', name: 'Twin and earth cable', size: '1.0 mm², per metre', unit: 'm', category: 'Electrical', price: 80, source: BMW('80 per m') },
+  { key: 'consumer_unit_4way', name: 'Consumer unit (distribution board)', size: '4-way', unit: 'piece', category: 'Electrical', price: 2150, source: BMW('2,000–2,300') },
+  { key: 'mcb', name: 'Miniature circuit breaker (MCB)', size: 'single pole', unit: 'piece', category: 'Electrical', price: 2000, source: AS('1,000–3,000 each') },
+  { key: 'switch_single', name: 'Single switch', size: 'one-way', unit: 'piece', category: 'Electrical', price: 175, source: BMW('150–200') },
+  { key: 'led_bulb', name: 'LED bulb', size: '7–10 W', unit: 'piece', category: 'Electrical', price: 550, source: AS('300–800 each') },
+  { key: 'bulb_holder', name: 'Bulb holder (batten)', size: 'standard', unit: 'piece', category: 'Electrical', price: 100, source: BMW('80–150') },
+  { key: 'ceiling_light', name: 'Ceiling light fitting, standard', size: 'supply only', unit: 'piece', category: 'Electrical', price: 3250, source: AS('1,500–5,000') },
+  { key: 'conduit_bend_20', name: 'Conduit bend', size: '20 mm (½″)', unit: 'piece', category: 'Electrical', price: 20, source: BMW('20') },
+
+  // Doors & windows
+  { key: 'door_hardwood_external', name: 'External door, hardwood (mahogany)', size: 'standard leaf', unit: 'piece', category: 'Doors, windows & ironmongery', price: 47500, source: AS('35,000–60,000') },
+  { key: 'door_softwood_external', name: 'External door, softwood', size: 'standard leaf', unit: 'piece', category: 'Doors, windows & ironmongery', price: 22500, source: AS('15,000–30,000') },
+  { key: 'door_panel_internal', name: 'Internal panel door', size: 'standard leaf', unit: 'piece', category: 'Doors, windows & ironmongery', price: 18500, source: AS('12,000–25,000') },
+  { key: 'window_aluminium_pc', name: 'Aluminium window, powder-coated', size: 'per m²', unit: 'm²', category: 'Doors, windows & ironmongery', price: 15000, source: AS('12,000–18,000 per m²') },
+  { key: 'window_cypress', name: 'Timber window, cypress', size: 'per m²', unit: 'm²', category: 'Doors, windows & ironmongery', price: 14000, source: AS('10,000–18,000 per m²') },
+  { key: 'window_mahogany', name: 'Timber window, mahogany', size: 'per m²', unit: 'm²', category: 'Doors, windows & ironmongery', price: 20000, source: AS('15,000–25,000 per m²') },
+
+  // Boards & ceilings
+  { key: 'gypsum_board_mr', name: 'Gypsum board, moisture-resistant', size: '8 × 4 ft', unit: 'sheet', category: 'Finishes', price: 775, source: AS('650–900') },
+  { key: 'gypsum_board_fr', name: 'Gypsum board, fire-resistant', size: '8 × 4 ft', unit: 'sheet', category: 'Finishes', price: 950, source: AS('800–1,100') },
+  { key: 'tng_ceiling', name: 'Tongue-and-groove timber ceiling boards', size: 'per m²', unit: 'm²', category: 'Finishes', price: 1250, source: AS('1,000–1,500 per m²') },
+  { key: 'hardboard', name: 'Hardboard', size: 'standard sheet', unit: 'sheet', category: 'Timber', price: 1150, source: AS('800–1,500') },
+  { key: 'flooring_board_6x1', name: 'Timber flooring board 6 in × 1 in', size: '12 ft piece', unit: 'piece', category: 'Timber', price: 575, source: FL('450–700') }
 ]
