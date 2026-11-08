@@ -5,6 +5,7 @@ import postgres from 'postgres'
 import * as s from './schema'
 import * as d from './seed-data'
 import * as m from './seed-measurement'
+import { MORE_MATERIALS } from './data/materials-2026'
 import { MODULES } from '../../shared/calc/modules'
 import { connectionOptions, normaliseDatabaseUrl } from './connection'
 
@@ -48,7 +49,7 @@ for (const tier of d.TIERS) {
 
 // Materials and prices
 let added = 0
-for (const [i, { key, name, size, unit, category, kind, price, source }] of d.MATERIALS.entries()) {
+for (const [i, { key, name, size, unit, category, kind, price, source }] of [...d.MATERIALS, ...MORE_MATERIALS].entries()) {
   const inserted = await db.insert(s.materials).values({ key, name, size, unit, category, kind: kind ?? 'material', sort: i + 1 }).onConflictDoNothing().returning({ id: s.materials.id })
   if (inserted.length) added++
   const [m] = await db.select().from(s.materials).where(eq(s.materials.key, key))
