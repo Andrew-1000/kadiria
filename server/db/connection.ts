@@ -26,6 +26,10 @@ export function connectionOptions(url: string, max: number): Options<Record<stri
     max,
     ...(serverless ? { idle_timeout: 20, connect_timeout: 10 } : {}),
     prepare: !transactionPooler,
+    // The transaction pooler stalls on pipelined queries (several sent on one connection
+    // before the first finishes). 0 = one query at a time per connection; extra queries
+    // wait for a free connection instead.
+    ...(transactionPooler ? { max_pipeline: 0 } : {}),
     ...(supabase && !/sslmode=/.test(url) ? { ssl: 'require' as const } : {}),
     onnotice: () => {}
   }
