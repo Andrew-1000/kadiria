@@ -20,6 +20,7 @@ const admin = computed<NavigationMenuItem[]>(() => user.value?.role !== 'admin'
       { label: 'Calculator settings', icon: 'i-lucide-sliders-horizontal', to: '/admin/calculators' },
       { label: 'BQ library', icon: 'i-lucide-library', to: '/admin/library' },
       { label: 'Estimate requests', icon: 'i-lucide-inbox', to: '/admin/leads' },
+      { label: 'Website enquiries', icon: 'i-lucide-mail', to: '/admin/enquiries' },
       { label: 'Users', icon: 'i-lucide-users', to: '/admin/users' },
       { label: 'Website integration', icon: 'i-lucide-plug', to: '/admin/integration' },
       { label: 'Activity log', icon: 'i-lucide-history', to: '/admin/audit' }

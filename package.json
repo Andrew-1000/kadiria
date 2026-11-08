@@ -23,6 +23,7 @@
     "@iconify-json/lucide": "1.2.147",
     "@nuxt/ui": "4.12.0",
     "drizzle-orm": "0.45.4",
+    "iron-webcrypto": "1.2.1",
     "nuxt": "4.6.2",
     "nuxt-auth-utils": "0.5.32",
     "postgres": "3.4.9",

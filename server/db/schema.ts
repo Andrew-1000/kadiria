@@ -335,6 +335,24 @@ export const estimateRequests = pgTable('estimate_requests', {
   createdAt: createdAt()
 })
 
+/** Contact, consultation and plan enquiries sent from the company websites. */
+export const siteEnquiries = pgTable('site_enquiries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  /** Which website sent it, e.g. 'davecore' or 'desseo'. */
+  site: text('site').notNull().default('davecore'),
+  /** consultation | plan | contact | quote */
+  kind: text('kind').notNull().default('contact'),
+  name: text('name').notNull(),
+  phone: text('phone').notNull().default(''),
+  email: text('email').notNull().default(''),
+  subject: text('subject').notNull().default(''),
+  message: text('message').notNull().default(''),
+  /** Plan reference when the enquiry is about a plan for sale. */
+  planRef: text('plan_ref').notNull().default(''),
+  status: text('status').notNull().default('new'),
+  createdAt: createdAt()
+}, t => [index('site_enquiries_created_idx').on(t.createdAt)])
+
 export const auditEvents = pgTable('audit_events', {
   id: uuid('id').primaryKey().defaultRandom(),
   actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),

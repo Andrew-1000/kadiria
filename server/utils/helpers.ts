@@ -1,5 +1,6 @@
 import type { H3Event } from 'h3'
 import type { z } from 'zod'
+import { eq } from 'drizzle-orm'
 
 export type Role = 'admin' | 'professional' | 'member'
 
@@ -36,9 +37,25 @@ export function parseQuery<T extends z.ZodType>(event: H3Event, schema: T): z.in
   return result.data
 }
 
+/**
+ * The signed-in user, from a website bearer token (`Authorization: Bearer …`) or the session
+ * cookie used by this app. Bearer users are re-loaded from the database so a disabled account or
+ * changed role takes effect immediately.
+ */
 export async function requireUser(event: H3Event, roles?: Role[]): Promise<SessionUser> {
-  const session = await requireUserSession(event)
-  const user = session.user as unknown as SessionUser
+  const header = getHeader(event, 'authorization') ?? ''
+  let user: SessionUser
+  if (header.startsWith('Bearer ') && !header.startsWith('Bearer dvk_')) {
+    const uid = await readToken(header.slice(7).trim())
+    if (!uid) throw createError({ statusCode: 401, statusMessage: 'Your session has expired. Please sign in again.' })
+    const [row] = await useDb().select().from(tables.users).where(eq(tables.users.id, uid))
+    if (!row || !row.active) throw createError({ statusCode: 401, statusMessage: 'Account not found or disabled.' })
+    user = { id: row.id, name: row.name, email: row.email, role: row.role }
+  }
+  else {
+    const session = await requireUserSession(event)
+    user = session.user as unknown as SessionUser
+  }
   if (roles && !roles.includes(user.role)) throw createError({ statusCode: 403, statusMessage: 'You do not have permission to do this.' })
   return user
 }

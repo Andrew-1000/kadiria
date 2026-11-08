@@ -10,11 +10,17 @@ const props = defineProps<{ embedded?: boolean }>()
 const { data: config } = await useBqConfig()
 const { call, toast } = useApi()
 
+// Optional pre-fill from the URL, e.g. from a house plan on the company website:
+// ?type=maisonette&areas=110,110&finish=standard&location=<id>
+const query = useRoute().query
+const q = (v: unknown) => (Array.isArray(v) ? v[0] : v) as string | undefined
+const qAreas = String(q(query.areas) ?? '').split(',').map(Number).filter(n => n > 0 && n < 100000)
+
 const countryCode = ref('KE')
-const locationId = ref<number | null>(null)
-const buildingTypeKey = ref('bungalow')
-const finishKey = ref('standard')
-const floorAreas = ref<number[]>([120])
+const locationId = ref<number | null>(config.value?.locations.some(l => l.id === Number(q(query.location))) ? Number(q(query.location)) : null)
+const buildingTypeKey = ref(config.value?.buildingTypes.some(b => b.key === q(query.type)) ? q(query.type)! : 'bungalow')
+const finishKey = ref(config.value?.finishes.some(f => f.key === q(query.finish)) ? q(query.finish)! : 'standard')
+const floorAreas = ref<number[]>(qAreas.length ? qAreas : [120])
 const useQuotedRate = ref(false)
 const manualRate = ref<number | null>(null)
 const addonKeys = ref<string[]>([])
@@ -54,8 +60,10 @@ const rate = computed(() => useQuotedRate.value && manualRate.value && manualRat
 watch([locationId, finishKey, buildingTypeKey], () => { manualRate.value = null; useQuotedRate.value = false })
 
 // Floors follow the building type's limits
-watch(buildingType, (bt) => {
+watch(buildingType, (bt, previous) => {
   if (!bt) return
+  // Keep floor areas passed in the URL on first load when they fit the building type
+  if (!previous && qAreas.length >= bt.minFloors && qAreas.length <= bt.maxFloors) return
   const n = Math.min(bt.maxFloors, Math.max(bt.minFloors, bt.defaultFloors))
   const last = floorAreas.value[floorAreas.value.length - 1] ?? 120
   floorAreas.value = Array.from({ length: n }, (_, i) => floorAreas.value[i] ?? last)
