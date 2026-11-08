@@ -61,9 +61,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       </p>
     </div>
 
-    <div class="mt-4 grid lg:grid-cols-[16rem_minmax(0,1fr)] gap-8 items-start">
+    <!-- Columns follow the space this page actually gets (the workspace sidebar takes some), not the window -->
+    <div class="@container mt-4">
+    <div class="grid gap-8 items-start @4xl:grid-cols-[15rem_minmax(0,1fr)]">
       <!-- All six steps (below the stage on small screens) -->
-      <nav aria-label="The six building stages" class="order-last lg:order-first lg:sticky lg:top-20">
+      <nav aria-label="The six building stages" class="order-last @4xl:order-none @4xl:col-start-1 @4xl:row-start-1 @4xl:sticky @4xl:top-20">
         <p class="text-[11px] font-semibold uppercase tracking-wider text-muted mb-3">
           The six stages
         </p>
@@ -89,8 +91,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       </nav>
 
       <!-- The chosen stage -->
-      <article :key="stage.key" class="stage-in min-w-0 rounded-2xl border border-default bg-default overflow-hidden">
-        <div class="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      <article :key="stage.key" class="@container stage-in min-w-0 @4xl:col-start-2 @4xl:row-start-1 rounded-2xl border border-default bg-default overflow-hidden">
+        <div class="grid @3xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
           <div class="p-6 sm:p-8">
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
               Step {{ stage.no }}
@@ -106,12 +108,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               <span class="inline-flex items-center gap-1.5"><UIcon name="i-lucide-package-check" class="text-primary" /> {{ stage.output }}</span>
             </div>
           </div>
-          <div class="bg-elevated/50 border-t md:border-t-0 md:border-l border-default p-4 sm:p-6 grid place-items-center text-default">
+          <div class="bg-elevated/50 border-t @3xl:border-t-0 @3xl:border-l border-default p-4 sm:p-6 grid place-items-center text-default">
             <JourneyArt :stage="stage.key" class="max-w-md" />
           </div>
         </div>
 
-        <div class="border-t border-default p-6 sm:p-8 grid md:grid-cols-2 gap-8">
+        <div class="border-t border-default p-6 sm:p-8 grid @2xl:grid-cols-2 gap-8">
           <section>
             <h2 class="text-[11px] font-semibold uppercase tracking-wider text-muted">
               What is done
@@ -162,6 +164,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           </NuxtLink>
         </div>
       </article>
+    </div>
     </div>
     <p class="mt-6 text-xs text-dimmed hidden lg:block no-print">
       Tip: use the ← and → keys to move between stages.
