@@ -49,7 +49,7 @@ async function submit() {
             <UInput v-model="form.organisation" class="w-full" size="lg" />
           </UFormField>
           <UFormField label="Password" help="At least 8 characters." required>
-            <UInput v-model="form.password" type="password" autocomplete="new-password" class="w-full" size="lg" />
+            <PasswordInput v-model="form.password" autocomplete="new-password" class="w-full" size="lg" />
           </UFormField>
           <UButton type="submit" block size="lg" :loading="loading" label="Create account" />
         </form>

@@ -98,7 +98,7 @@ async function save() {
               <USelect v-model="form.role" :items="roles" class="w-full" />
             </UFormField>
             <UFormField :label="editing ? 'New password' : 'Password'" :help="editing ? 'Leave blank to keep the current password.' : 'At least 8 characters.'" :required="!editing">
-              <UInput v-model="form.password" type="password" autocomplete="new-password" class="w-full" />
+              <PasswordInput v-model="form.password" autocomplete="new-password" class="w-full" />
             </UFormField>
             <USwitch v-if="editing" v-model="form.active" label="Account active" />
           </form>
