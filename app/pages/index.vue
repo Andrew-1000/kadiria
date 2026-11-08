@@ -3,14 +3,11 @@ import { PREREQUISITES } from '#shared/calc/bq'
 
 const { data: config } = await useBqConfig()
 const { loggedIn } = useUserSession()
-const NuxtLink = resolveComponent('NuxtLink')
 
-/** Visitors can open the stages that have a public tool; signed-in users every stage. */
-const PUBLIC_STAGES: Record<string, string> = { plan: 'Estimate my build', quantify: 'Calculate materials' }
-const stageLink = (s: JourneyStage) => (loggedIn.value || s.key in PUBLIC_STAGES ? s.to : undefined)
-const stageAction = (s: JourneyStage) => (loggedIn.value ? `Open ${s.tool.toLowerCase()}` : PUBLIC_STAGES[s.key] ?? '')
+/** Each stage card opens its page in the building guide. */
+const stageLink = (s: JourneyStage) => `/guide/${s.key}`
 /** "Architect, structural & MEP engineers, county planning office" → tags */
-const people = (who: string) => who.split(/,s*/).map(w => w.trim()).filter(Boolean)
+const people = (who: string) => who.split(/,\s*/).map(w => w.trim()).filter(Boolean)
   .map(w => (/^often with an? /i.test(w) ? `${w.replace(/^often with an? /i, '')} (optional)` : w))
   .map(w => w.charAt(0).toUpperCase() + w.slice(1))
 useSeoMeta({ title: 'Kadiria: construction cost, materials & Bills of Quantities' })
@@ -69,12 +66,7 @@ const bills = [
     >
       <ol class="relative grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <li v-for="s in JOURNEY" :key="s.key">
-          <component
-            :is="stageLink(s) ? NuxtLink : 'div'"
-            :to="stageLink(s)"
-            class="group flex h-full flex-col rounded-xl border border-default p-5 transition"
-            :class="stageLink(s) ? 'hover:border-primary/60 hover:bg-elevated/40' : ''"
-          >
+          <NuxtLink :to="stageLink(s)" class="group flex h-full flex-col rounded-xl border border-default p-5 transition hover:border-primary/60 hover:bg-elevated/40">
             <div class="flex items-center gap-3">
               <span class="size-9 shrink-0 rounded-full bg-primary text-inverted grid place-items-center font-bold">{{ s.no }}</span>
               <div>
@@ -101,10 +93,10 @@ const bills = [
             <p class="mt-4 text-xs text-muted">
               <span class="font-semibold text-default">You get:</span> {{ s.output }}
             </p>
-            <span v-if="stageLink(s)" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
-              {{ stageAction(s) }} <UIcon name="i-lucide-arrow-right" class="transition group-hover:translate-x-1" />
+            <span class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+              See step {{ s.no }} in full <UIcon name="i-lucide-arrow-right" class="transition group-hover:translate-x-1" />
             </span>
-          </component>
+          </NuxtLink>
         </li>
       </ol>
     </UPageSection>

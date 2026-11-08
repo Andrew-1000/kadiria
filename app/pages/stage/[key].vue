@@ -2,8 +2,8 @@
 import { readiness } from '#shared/calc/bq'
 
 /*
- * Public pages for journey stages 4–6 (draft, review, tender). They keep visitors inside the
- * journey's tabbed layout, explain the stage, and lead into the signed-in tools. Signed-in users
+ * Public pages for journey stages 4–6 (draft, review, tender). They explain the stage in
+ * detail (opened from the building guide) and lead into the signed-in tools. Signed-in users
  * also see their own BQs that are at this stage.
  */
 const SLUGS = { draft: 'bq', review: 'review', tender: 'build' } as const

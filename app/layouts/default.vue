@@ -51,6 +51,7 @@ const workspace = computed<NavigationMenuItem[]>(() => [
 
 // The construction guide: stages that aren't a calculator of their own
 const guide = computed<NavigationMenuItem[]>(() => [
+  { label: 'The six stages', icon: 'i-lucide-milestone', to: '/guide', active: route.path.startsWith('/guide') },
   ...JOURNEY.filter(s => ['prepare', 'bq', 'review', 'build'].includes(s.key)).map(s => ({
     label: s.key === 'prepare' ? 'What a BQ needs' : s.title,
     icon: s.icon,
@@ -86,7 +87,7 @@ const publicLinks = computed<NavigationMenuItem[]>(() => [
 
 /** Title in the top bar of pages wrapped by this layout. */
 const TITLES: Record<string, string> = { '/': 'Home', '/estimate': 'Cost calculator', '/calculators': 'Material calculators', '/prepare': 'What a BQ needs', '/standards': 'Measurement & rules', '/structures': 'Other structures', '/login': 'Sign in', '/register': 'Create account' }
-const pageTitle = computed(() => TITLES[route.path] ?? (route.path.startsWith('/stage/') ? JOURNEY.find(s => s.to === route.path)?.title ?? 'Construction guide' : 'Kadiria'))
+const pageTitle = computed(() => TITLES[route.path] ?? (route.path.startsWith('/guide') ? 'Building guide' : null) ?? (route.path.startsWith('/stage/') ? JOURNEY.find(s => s.to === route.path)?.title ?? 'Construction guide' : 'Kadiria'))
 </script>
 
 <template>
