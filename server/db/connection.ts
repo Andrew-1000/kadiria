@@ -5,7 +5,10 @@ import type { Options, PostgresType } from 'postgres'
  * - Hosted Supabase: encrypted connection (sslmode=require).
  * - Supabase transaction pooler (port 6543, used from serverless hosts such as Netlify):
  *   prepared statements are not supported, so turn them off.
- * - Serverless functions: keep few connections per instance; the pooler does the rest.
+ * - Serverless functions: close idle connections quickly. Keep enough connections for the
+ *   parallel queries a request makes (the public config runs ~12 at once): with too few,
+ *   postgres.js pipelines queries on one connection, which the transaction pooler doesn't
+ *   handle reliably, and the request hangs.
  */
 export function connectionOptions(url: string, max: number): Options<Record<string, PostgresType>> {
   let host = ''
@@ -20,7 +23,8 @@ export function connectionOptions(url: string, max: number): Options<Record<stri
   const transactionPooler = port === '6543'
   const serverless = !!(process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.VERCEL)
   return {
-    max: serverless ? Math.min(max, 2) : max,
+    max,
+    ...(serverless ? { idle_timeout: 20, connect_timeout: 10 } : {}),
     prepare: !transactionPooler,
     ...(supabase && !/sslmode=/.test(url) ? { ssl: 'require' as const } : {}),
     onnotice: () => {}
