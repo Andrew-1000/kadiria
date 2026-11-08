@@ -8,7 +8,7 @@ const current = computed(() => journeyStage(props.stage))
 const open = ref(!props.compact)
 // Public pages keep visitors inside the journey; inside the workspace, link to the working pages.
 const route = useRoute()
-const inApp = computed(() => route.meta.layout === 'dashboard')
+const inApp = computed(() => route.meta.ownPanel === true)
 const linkFor = (s: JourneyStage) => (inApp.value && s.appTo) || s.to
 </script>
 

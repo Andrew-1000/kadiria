@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'dashboard', middleware: 'admin' })
+definePageMeta({ ownPanel: true, middleware: 'admin' })
 useSeoMeta({ title: 'Methods of measurement | Admin' })
 
 const { data: standards, refresh } = await useFetch<{ key: string, code: string }[]>('/api/admin/ref/standards', { default: () => [], server: false })

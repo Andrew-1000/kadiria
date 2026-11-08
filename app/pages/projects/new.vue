@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PREREQUISITES, readiness, computeDrivers, DEFAULT_PARAMS, DRIVERS, type PrereqStatus } from '#shared/calc/bq'
 
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ ownPanel: true, middleware: 'auth' })
 useSeoMeta({ title: 'New BQ | Kadiria' })
 
 const route = useRoute()

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'dashboard', middleware: 'admin' })
+definePageMeta({ ownPanel: true, middleware: 'admin' })
 useSeoMeta({ title: 'Feature switches | Admin' })
 const refreshConfig = () => refreshNuxtData('bq-config')
 </script>

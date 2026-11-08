@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'dashboard', middleware: 'admin' })
+definePageMeta({ ownPanel: true, middleware: 'admin' })
 useSeoMeta({ title: 'Website integration | Admin' })
 
 interface Key { id: string, name: string, prefix: string, createdAt: string, lastUsedAt: string | null, revokedAt: string | null }

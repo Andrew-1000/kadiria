@@ -13,7 +13,7 @@ const props = defineProps<{
   embedded?: boolean
   initialModule?: string
 }>()
-const emit = defineEmits<{ added: [] }>()
+const emit = defineEmits<{ added: [], 'module-change': [key: string] }>()
 
 interface RunResult {
   module: { key: string, name: string }
@@ -32,6 +32,9 @@ const { loggedIn } = useUserSession()
 
 const modules = computed(() => config.value?.modules ?? [])
 const activeKey = ref(props.initialModule && modules.value.some(m => m.key === props.initialModule) ? props.initialModule : modules.value[0]?.key ?? '')
+// Follow the page address (sidebar links), and report changes made on the drawing
+watch(() => props.initialModule, (k) => { if (k && k !== activeKey.value && modules.value.some(m => m.key === k)) activeKey.value = k })
+watch(activeKey, k => emit('module-change', k))
 const active = computed(() => modules.value.find(m => m.key === activeKey.value))
 const activeIndex = computed(() => modules.value.findIndex(m => m.key === activeKey.value))
 const prevModule = computed(() => activeIndex.value > 0 ? modules.value[activeIndex.value - 1] : undefined)

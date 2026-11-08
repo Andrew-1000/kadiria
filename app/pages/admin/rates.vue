@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'dashboard', middleware: 'admin' })
+definePageMeta({ ownPanel: true, middleware: 'admin' })
 useSeoMeta({ title: 'Locations & rates | Admin' })
 
 interface Tier { id: number, countryCode: string, key: string, label: string }

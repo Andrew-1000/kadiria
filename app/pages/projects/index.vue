@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ ownPanel: true, middleware: 'auth' })
 useSeoMeta({ title: 'BQ Projects | Kadiria' })
 
 interface Row { id: string, name: string, client: string, status: string, revision: number, currency: string, updatedAt: string, locationName: string | null, ownerName: string | null, grandTotal: number, itemCount: number }

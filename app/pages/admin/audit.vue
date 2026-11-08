@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'dashboard', middleware: 'admin' })
+definePageMeta({ ownPanel: true, middleware: 'admin' })
 useSeoMeta({ title: 'Activity log | Admin' })
 
 interface Ev { id: string, actorName: string | null, action: string, details: Record<string, unknown>, projectId: string | null, at: string }

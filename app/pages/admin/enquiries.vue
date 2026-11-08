@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'dashboard', middleware: 'admin' })
+definePageMeta({ ownPanel: true, middleware: 'admin' })
 useSeoMeta({ title: 'Website enquiries | Admin' })
 
 interface Enquiry { id: string, site: string, kind: string, name: string, phone: string, email: string, subject: string, message: string, planRef: string, status: string, createdAt: string }

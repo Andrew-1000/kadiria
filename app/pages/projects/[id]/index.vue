@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PREREQUISITES } from '#shared/calc/bq'
 
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ ownPanel: true, middleware: 'auth' })
 
 const route = useRoute()
 const id = computed(() => String(route.params.id))

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'dashboard', middleware: 'admin' })
+definePageMeta({ ownPanel: true, middleware: 'admin' })
 useSeoMeta({ title: 'Calculator settings | Admin' })
 
 interface Constant { key: string, label: string, value: number, unit: string, groupName: string, description: string }

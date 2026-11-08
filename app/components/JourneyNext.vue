@@ -3,7 +3,7 @@
 const props = defineProps<{ stage: JourneyStage['key'], to?: string | Record<string, unknown>, label?: string, hint?: string }>()
 const next = computed(() => nextStage(props.stage))
 const route = useRoute()
-const target = computed(() => props.to ?? ((route.meta.layout === 'dashboard' && next.value?.appTo) || next.value?.to))
+const target = computed(() => props.to ?? ((route.meta.ownPanel === true && next.value?.appTo) || next.value?.to))
 </script>
 
 <template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DRIVERS } from '#shared/calc/bq'
 
-definePageMeta({ layout: 'dashboard', middleware: 'admin' })
+definePageMeta({ ownPanel: true, middleware: 'admin' })
 useSeoMeta({ title: 'BQ library | Admin' })
 
 const { data: bills, refresh: refreshBills } = await useFetch<{ key: string, title: string, number: number }[]>('/api/admin/ref/bill_templates', { default: () => [], server: false })
