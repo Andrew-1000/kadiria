@@ -98,9 +98,9 @@ export const STRUCTURES: StructureDef[] = [
     inputs: [
       n('length', 'Wall length', 'm', 60, { required: true }),
       n('height', 'Height above ground', 'm', 2.4),
-      n('thickness', 'Wall thickness', 'm', 0.2),
+      n('thickness', 'Wall thickness', 'm', 0.2, { advanced: true }),
       sel('unitType', 'Walling units', 'stone', WALL_UNITS),
-      n('foundationDepth', 'Foundation depth', 'm', 0.6),
+      n('foundationDepth', 'Foundation depth', 'm', 0.6, { advanced: true }),
       sel('gate', 'Gate', 'vehicle', [['none', 'No gate'], ['pedestrian', 'Pedestrian gate (1.0 m)'], ['vehicle', 'Vehicle gate (3.6 m)'], ['both', 'Vehicle + pedestrian']]),
       sel('finish', 'Finish', 'fair', [['fair', 'Fair-faced (no render)'], ['render', 'Rendered and painted both sides']])
     ],
@@ -140,10 +140,10 @@ export const STRUCTURES: StructureDef[] = [
     inputs: [
       n('doors', 'Number of cubicles (doors)', 'nr', 2, { min: 1, max: 10 }),
       n('pitDepth', 'Pit depth', 'm', 4),
-      n('pitWidth', 'Pit width', 'm', 1.5),
+      n('pitWidth', 'Pit width', 'm', 1.5, { advanced: true }),
       sel('lining', 'Pit lining', 'full', [['full', 'Stone lining, full depth'], ['collar', 'Top 1 m collar only (stable ground)']]),
       sel('walls', 'Cubicle walls', 'stone', [['stone', 'Machine-cut stone'], ['block', 'Concrete blocks'], ['sheet', 'Iron sheets on timber frame']]),
-      n('wallHeight', 'Cubicle height', 'm', 2.2)
+      n('wallHeight', 'Cubicle height', 'm', 2.2, { advanced: true })
     ],
     compute(i, ctx) {
       const w: string[] = []
@@ -244,7 +244,7 @@ export const STRUCTURES: StructureDef[] = [
       n('length', 'Fence length', 'm', 100, { required: true }),
       sel('type', 'Fence type', 'chainlink', [['chainlink', 'Chain link mesh'], ['barbed', 'Barbed wire strands']]),
       n('strands', 'Barbed wire strands (or top strands over chain link)', 'nr', 3, { max: 12 }),
-      n('postSpacing', 'Post spacing', 'm', 3)
+      n('postSpacing', 'Post spacing', 'm', 3, { advanced: true })
     ],
     compute(i, ctx) {
       const L = num(i, 'length'), sp = Math.max(1, num(i, 'postSpacing')), strands = Math.round(num(i, 'strands'))
@@ -293,7 +293,7 @@ export const STRUCTURES: StructureDef[] = [
     group: 'Site & external works',
     icon: 'i-lucide-cylinder',
     description: 'Reinforced concrete tank tower: four columns on pad bases, tie and ring beams, and a top slab; optionally with the tank.',
-    inputs: [n('height', 'Platform height', 'm', 3), n('side', 'Platform size (square)', 'm', 2), sel('tank', 'Tank', 'water_tank_5000', TANKS)],
+    inputs: [n('height', 'Platform height', 'm', 3), n('side', 'Platform size (square)', 'm', 2, { advanced: true }), sel('tank', 'Tank', 'water_tank_5000', TANKS)],
     compute(i, ctx) {
       const w: string[] = []
       const H = num(i, 'height'), S = num(i, 'side')
@@ -317,7 +317,7 @@ export const STRUCTURES: StructureDef[] = [
     icon: 'i-lucide-warehouse',
     description: 'Small single-room building: foundations, floor slab, walls, trussed iron-sheet roof, door and window.',
     inputs: [
-      n('length', 'Length', 'm', 4), n('width', 'Width', 'm', 3), n('wallHeight', 'Wall height', 'm', 2.7),
+      n('length', 'Length', 'm', 4), n('width', 'Width', 'm', 3), n('wallHeight', 'Wall height', 'm', 2.7, { advanced: true }),
       sel('walls', 'Walls', 'stone', [['stone', 'Machine-cut stone'], ['block', 'Concrete blocks'], ['sheet', 'Iron sheets on timber frame']]),
       n('doors', 'Doors', 'nr', 1), n('windowArea', 'Window area', 'm²', 1.2)
     ],
@@ -361,7 +361,7 @@ export const STRUCTURES: StructureDef[] = [
     description: 'Water supply and drainage for a house or block: sanitary fittings, PPR supply pipework, uPVC drainage, tank and inspection chamber covers.',
     inputs: [
       n('wcs', 'WCs', 'nr', 2), n('basins', 'Wash basins', 'nr', 2), n('sinks', 'Kitchen sinks', 'nr', 1), n('showers', 'Showers', 'nr', 2), n('taps', 'Outside taps', 'nr', 1),
-      n('runPerPoint', 'Supply pipe per point', 'm', 6), n('drainRun', 'Drainage pipe run', 'm', 30), n('chambers', 'Inspection chambers', 'nr', 3),
+      n('runPerPoint', 'Supply pipe per point', 'm', 6, { advanced: true }), n('drainRun', 'Drainage pipe run', 'm', 30, { advanced: true }), n('chambers', 'Inspection chambers', 'nr', 3, { advanced: true }),
       sel('tank', 'Storage tank', 'water_tank_3000', TANKS)
     ],
     compute(i, ctx) {
@@ -405,8 +405,8 @@ export const STRUCTURES: StructureDef[] = [
     description: 'Wiring for a house or block: lighting and socket points in conduit, cooker circuit, consumer units and breakers.',
     inputs: [
       n('lights', 'Lighting points', 'nr', 12), n('sockets', '13 A socket points', 'nr', 10), sel('cooker', 'Cooker point', 'yes', [['yes', 'Yes'], ['no', 'No']]),
-      n('lightRun', 'Cable run per lighting point', 'm', 8), n('socketRun', 'Cable run per socket point', 'm', 10),
-      n('lightsPerCircuit', 'Lighting points per circuit', 'nr', 8, { min: 1 }), n('socketsPerCircuit', 'Socket points per circuit', 'nr', 6, { min: 1 })
+      n('lightRun', 'Cable run per lighting point', 'm', 8, { advanced: true }), n('socketRun', 'Cable run per socket point', 'm', 10, { advanced: true }),
+      n('lightsPerCircuit', 'Lighting points per circuit', 'nr', 8, { min: 1, advanced: true }), n('socketsPerCircuit', 'Socket points per circuit', 'nr', 6, { min: 1, advanced: true })
     ],
     compute(i, ctx) {
       const lights = Math.max(0, Math.round(num(i, 'lights'))), sockets = Math.max(0, Math.round(num(i, 'sockets')))

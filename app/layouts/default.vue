@@ -78,11 +78,10 @@ const admin = computed<NavigationMenuItem[]>(() => user.value?.role !== 'admin'
 
 // Signed-out visitors get the public top bar; signed-in users (and workspace pages) the sidebar
 const workspaceView = computed(() => loggedIn.value || !!route.meta.ownPanel)
+// The public sees the two calculators; other structures, BQ projects and the guide are for signed-in users
 const publicLinks = computed<NavigationMenuItem[]>(() => [
   ...(flags.value.cost_estimator !== false ? [{ label: 'Cost calculator', icon: 'i-lucide-calculator', to: '/estimate' }] : []),
-  ...(flags.value.material_calculators !== false ? [{ label: 'Material calculators', icon: 'i-lucide-boxes', to: '/calculators' }, { label: 'Other structures', icon: 'i-lucide-shapes', to: '/structures' }] : []),
-  ...(flags.value.bq_projects !== false ? [{ label: 'BQ projects', icon: 'i-lucide-folder-kanban', to: '/login?redirect=/projects' }] : []),
-  { label: 'Construction guide', icon: 'i-lucide-signpost', children: guide.value.map(g => ({ ...g, description: undefined })) }
+  ...(flags.value.material_calculators !== false ? [{ label: 'Material calculators', icon: 'i-lucide-boxes', to: '/calculators' }] : [])
 ])
 
 /** Title in the top bar of pages wrapped by this layout. */
@@ -119,11 +118,6 @@ const pageTitle = computed(() => TITLES[route.path] ?? (route.path.startsWith('/
         <p class="text-sm text-muted">
           © {{ new Date().getFullYear() }} Kadiria · Estimates are indicative; confirm with a registered quantity surveyor.
         </p>
-      </template>
-      <template #right>
-        <ULink to="/standards" class="text-sm text-muted hover:text-default">
-          Measurement & rules
-        </ULink>
       </template>
     </UFooter>
   </div>

@@ -83,6 +83,59 @@ const materials = computed(() => {
 const money = (v: number | null | undefined) => (v === null || v === undefined ? '—' : Math.round(v).toLocaleString('en-KE'))
 const tab = ref<'bq' | 'materials'>('bq')
 
+/* ---- Public (signed-out) view: a simple quote and a quotation request; full detail after sign-in ---- */
+const simple = computed(() => !loggedIn.value)
+const moreOptions = ref(false)
+const shownInputs = computed(() => def.value.inputs.filter(i => !simple.value || !i.advanced || moreOptions.value))
+const hasAdvanced = computed(() => def.value.inputs.some(i => i.advanced))
+const thousand = (v: number) => Math.round(v / 1000) * 1000
+const range = computed(() => result.value ? { low: thousand(result.value.total * 0.9), high: thousand(result.value.total * 1.1) } : null)
+const PLAIN: Record<string, string> = {
+  preliminaries: 'Site setup', substructure: 'Foundations and work below ground', superstructure: 'Walls and structure', roofing: 'Roof',
+  doors_windows: 'Doors, windows and vents', finishes: 'Finishes', services: 'Plumbing, electrical and fittings', external: 'Walls, gates and outside works'
+}
+const covers = computed(() => {
+  const groups = new Map<string, number>()
+  for (const l of (result.value?.parts ?? []).flatMap(p => p.bqLines)) groups.set(l.billKey, (groups.get(l.billKey) ?? 0) + l.amount)
+  return [...groups.entries()].map(([k, amount]) => ({ label: PLAIN[k] ?? k, amount }))
+})
+
+const request = reactive({ name: '', phone: '', email: '', message: '', website: '' })
+const sending = ref(false)
+const sent = ref(false)
+const requestError = ref('')
+function describeInputs() {
+  return def.value.inputs.map((i) => {
+    const v = inputs[i.key]
+    const shown = i.type === 'select' ? i.options?.find(o => String(o.value) === String(v))?.label ?? v : `${v}${i.unit ? ` ${i.unit}` : ''}`
+    return `${i.label}: ${shown}`
+  }).join('\n')
+}
+async function sendRequest() {
+  requestError.value = ''
+  if (!request.phone && !request.email) { requestError.value = 'Please give a phone number or an email so we can reach you.'; return }
+  sending.value = true
+  try {
+    const town = locationItems.value.find(l => l.value === locationId.value)?.label ?? ''
+    await $fetch('/api/site/enquiries', {
+      method: 'POST',
+      body: {
+        site: 'kadiria', kind: 'quote', name: request.name, phone: request.phone, email: request.email, website: request.website,
+        subject: `Quotation request: ${def.value.name}${town ? `, ${town}` : ''}`,
+        message: [`${def.value.name}${town ? ` in ${town}` : ''}`, describeInputs(), result.value ? `Online estimate: KES ${money(result.value.total)} (range ${money(range.value?.low)} – ${money(range.value?.high)})` : '', request.message ? `Notes: ${request.message}` : ''].filter(Boolean).join('\n\n')
+      }
+    })
+    sent.value = true
+  }
+  catch (e) {
+    requestError.value = errorMessage(e)
+  }
+  finally {
+    sending.value = false
+  }
+}
+watch(key, () => { sent.value = false; moreOptions.value = false })
+
 // Create a BQ project from this structure
 const open = ref(false)
 const form = reactive({ name: '', client: '', measurementStandard: 'smm_ea' })
@@ -112,7 +165,7 @@ async function createBq() {
         Walls, latrines, tanks, services and more
       </h1>
       <p class="text-muted mt-2 max-w-3xl">
-        Not every job is a house. Pick a structure, give its size, and get the cost, the materials to buy and a ready Bill of Quantities, priced with the same rates and material prices as the house calculators.
+        {{ simple ? 'Not every job is a house. Pick what you want to build, give its size, and see what it is likely to cost. Then request a quotation.' : 'Not every job is a house. Pick a structure, give its size, and get the cost, the materials to buy and a ready Bill of Quantities, priced with the same rates and material prices as the house calculators.' }}
       </p>
     </div>
 
@@ -156,17 +209,89 @@ async function createBq() {
             <UFormField label="Location (prices)">
               <USelect v-model="locationId" :items="locationItems" class="w-full" />
             </UFormField>
-            <UFormField v-for="i in def.inputs" :key="i.key" :label="i.label" :hint="i.unit">
+            <UFormField v-for="i in shownInputs" :key="i.key" :label="i.label" :hint="i.unit">
               <USelect v-if="i.type === 'select'" v-model="inputs[i.key] as string" :items="(i.options ?? []).map(o => ({ label: o.label, value: String(o.value) }))" class="w-full" />
               <UInputNumber v-else v-model="inputs[i.key] as number" :min="i.min ?? 0" :max="i.max" :step="i.step ?? 0.1" class="w-full" />
             </UFormField>
           </div>
+          <UButton v-if="simple && hasAdvanced" size="xs" variant="link" color="neutral" :icon="moreOptions ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" :label="moreOptions ? 'Fewer options' : 'More options'" class="mt-2 -ms-2" @click="moreOptions = !moreOptions" />
         </section>
+
+        <!-- Public view: a simple quote and a quotation request -->
+        <template v-if="simple">
+          <section v-if="result" class="rounded-lg border border-default p-5" :class="loading ? 'opacity-70' : ''">
+            <p class="text-xs uppercase tracking-wider text-muted">
+              Your estimate
+            </p>
+            <p class="font-display text-4xl font-bold mt-1">
+              About KES {{ money(thousand(result.total)) }}
+            </p>
+            <p v-if="range" class="text-sm text-muted mt-1">
+              Likely between KES {{ money(range.low) }} and {{ money(range.high) }}, depending on your site and the final design.
+            </p>
+            <div class="mt-5 grid md:grid-cols-2 gap-6">
+              <div>
+                <p class="text-sm font-semibold">
+                  What this covers
+                </p>
+                <ul class="mt-2 divide-y divide-default text-sm">
+                  <li v-for="c in covers" :key="c.label" class="flex justify-between gap-4 py-2">
+                    <span>{{ c.label }}</span><span class="font-mono text-muted">KES {{ money(thousand(c.amount)) }}</span>
+                  </li>
+                  <li v-for="m in result.missingPrices" :key="m.key" class="flex justify-between gap-4 py-2">
+                    <span>{{ m.label }}</span><span class="text-muted">priced on request</span>
+                  </li>
+                </ul>
+                <p class="text-xs text-muted mt-2">
+                  Materials and labour at current local prices. Indicative only: a site visit firms up the price.
+                </p>
+              </div>
+
+              <!-- Request a quotation -->
+              <div class="rounded-lg bg-elevated/40 p-4">
+                <div v-if="sent" class="text-center py-4">
+                  <UIcon name="i-lucide-circle-check" class="size-8 text-success" />
+                  <p class="mt-2 font-semibold">
+                    Thank you{{ request.name ? `, ${request.name.split(' ')[0]}` : '' }}.
+                  </p>
+                  <p class="text-sm text-muted mt-1">
+                    We've received your request with these details and will call you to arrange your quotation.
+                  </p>
+                </div>
+                <form v-else class="space-y-3" @submit.prevent="sendRequest">
+                  <p class="font-semibold">
+                    Get a quotation
+                  </p>
+                  <p class="text-xs text-muted -mt-2">
+                    Leave your contact and we'll send a proper quotation for this {{ def.short.toLowerCase() }}.
+                  </p>
+                  <UInput v-model="request.name" required minlength="2" placeholder="Your name" autocomplete="name" class="w-full" />
+                  <div class="grid grid-cols-2 gap-2">
+                    <UInput v-model="request.phone" type="tel" placeholder="Phone" autocomplete="tel" class="w-full" />
+                    <UInput v-model="request.email" type="email" placeholder="Email (optional)" autocomplete="email" class="w-full" />
+                  </div>
+                  <UTextarea v-model="request.message" :rows="2" autoresize placeholder="Anything else? (plot location, timeline…)" class="w-full" />
+                  <input v-model="request.website" type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+                  <p v-if="requestError" class="text-sm text-error">
+                    {{ requestError }}
+                  </p>
+                  <UButton type="submit" block :loading="sending" icon="i-lucide-send" label="Request a quotation" />
+                </form>
+              </div>
+            </div>
+            <p class="mt-5 pt-4 border-t border-default text-sm text-muted">
+              Building professional? <ULink :to="`/register`" class="text-primary font-medium">Create a free account</ULink> or <ULink :to="`/login?redirect=${encodeURIComponent(route.fullPath)}`" class="text-primary font-medium">sign in</ULink> to see the full Bill of Quantities, quantities, rates and materials.
+            </p>
+          </section>
+          <div v-else-if="loading" class="py-16 text-center text-muted">
+            <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin" />
+          </div>
+        </template>
 
         <UAlert v-if="error" color="error" variant="subtle" icon="i-lucide-circle-alert" :title="error" />
 
-        <!-- Result -->
-        <section v-if="result" class="rounded-lg border border-default" :class="loading ? 'opacity-70' : ''">
+        <!-- Signed-in view: full breakdown -->
+        <section v-if="!simple && result" class="rounded-lg border border-default" :class="loading ? 'opacity-70' : ''">
           <div class="p-4 flex flex-wrap items-end justify-between gap-4 border-b border-default">
             <div>
               <p class="text-xs uppercase tracking-wider text-muted">
@@ -319,7 +444,7 @@ async function createBq() {
             </p>
           </div>
         </section>
-        <div v-else-if="loading" class="py-16 text-center text-muted">
+        <div v-else-if="loading && !simple" class="py-16 text-center text-muted">
           <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin" />
         </div>
       </div>

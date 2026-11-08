@@ -26,6 +26,8 @@ export interface InputDef {
   options?: InputOption[]
   help?: string
   group?: string
+  /** Technical input: hidden behind "More options" for the public (defaults apply). */
+  advanced?: boolean
 }
 
 export interface ResultLine { label: string, value: number, unit: string, emphasis?: boolean }

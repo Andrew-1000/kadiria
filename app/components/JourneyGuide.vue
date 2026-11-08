@@ -1,4 +1,6 @@
 <script setup lang="ts">
+// The construction guide is part of the signed-in workspace; the public site stays simple
+const { loggedIn: showGuide } = useUserSession()
 /**
  * "You are here" banner: the six construction stages, the current one highlighted, and a
  * plain-language explanation of what this stage is in a real building project.
@@ -13,7 +15,7 @@ const linkFor = (s: JourneyStage) => (inApp.value && s.appTo) || s.to
 </script>
 
 <template>
-  <nav class="rounded-xl border border-default bg-default no-print" aria-label="Construction journey">
+  <nav v-if="showGuide" class="rounded-xl border border-default bg-default no-print" aria-label="Construction journey">
     <ol class="flex overflow-x-auto">
       <li v-for="s in JOURNEY" :key="s.key" class="flex-1 min-w-[7.5rem]">
         <NuxtLink

@@ -15,15 +15,44 @@ const bills = [
   <div>
     <UPageHero
       title="Know what your building will cost before the first stone is laid"
-      description="Instant cost estimates for homeowners. Material quantities for fundis. Professional Bills of Quantities for quantity surveyors, contractors and developers. All on current Kenyan rates, kept up to date by our team."
+      :description="loggedIn ? 'Instant cost estimates for homeowners. Material quantities for fundis. Professional Bills of Quantities for quantity surveyors, contractors and developers. All on current Kenyan rates, kept up to date by our team.' : 'Get an instant cost estimate for your house, or work out the cement, sand, steel and stone you need, priced at current Kenyan rates. Then request a proper quotation.'"
       :links="[
         ...(config?.flags.cost_estimator !== false ? [{ label: 'Estimate my build', to: '/estimate', icon: 'i-lucide-calculator', size: 'xl' as const }] : []),
-        ...(config?.flags.bq_projects !== false ? [{ label: loggedIn ? 'Open my BQ projects' : 'Draft a professional BQ', to: loggedIn ? '/projects' : '/login?redirect=/projects/new', color: 'neutral' as const, variant: 'outline' as const, size: 'xl' as const, trailingIcon: 'i-lucide-arrow-right' }] : [])
+        ...(loggedIn
+          ? (config?.flags.bq_projects !== false ? [{ label: 'Open my BQ projects', to: '/projects', color: 'neutral' as const, variant: 'outline' as const, size: 'xl' as const, trailingIcon: 'i-lucide-arrow-right' }] : [])
+          : (config?.flags.material_calculators !== false ? [{ label: 'Calculate materials', to: '/calculators', icon: 'i-lucide-boxes', color: 'neutral' as const, variant: 'outline' as const, size: 'xl' as const }] : []))
       ]"
       :ui="{ title: 'font-display', container: 'py-16 sm:py-24' }"
     />
 
+    <!-- Public: the two tools -->
+    <UPageSection v-if="!loggedIn" :ui="{ container: 'py-6 sm:py-10' }">
+      <div class="grid md:grid-cols-2 gap-4">
+        <NuxtLink v-if="config?.flags.cost_estimator !== false" to="/estimate" class="group rounded-xl border border-default p-6 transition hover:border-primary/60 hover:bg-elevated/40">
+          <UIcon name="i-lucide-calculator" class="size-7 text-primary" />
+          <p class="font-display text-xl font-semibold mt-3">
+            How much will my house cost?
+          </p>
+          <p class="text-muted mt-1">
+            Choose your town, house type and size. Get a total, a likely range and what it covers in under a minute.
+          </p>
+          <span class="mt-4 inline-flex items-center gap-1 text-primary font-medium">Estimate my build <UIcon name="i-lucide-arrow-right" class="transition group-hover:translate-x-0.5" /></span>
+        </NuxtLink>
+        <NuxtLink v-if="config?.flags.material_calculators !== false" to="/calculators" class="group rounded-xl border border-default p-6 transition hover:border-primary/60 hover:bg-elevated/40">
+          <UIcon name="i-lucide-boxes" class="size-7 text-primary" />
+          <p class="font-display text-xl font-semibold mt-3">
+            What materials do I need?
+          </p>
+          <p class="text-muted mt-1">
+            Pick a part of the building, enter its size, and get the bags of cement, sand, ballast, steel and stone to buy, with prices.
+          </p>
+          <span class="mt-4 inline-flex items-center gap-1 text-primary font-medium">Calculate materials <UIcon name="i-lucide-arrow-right" class="transition group-hover:translate-x-0.5" /></span>
+        </NuxtLink>
+      </div>
+    </UPageSection>
+
     <UPageSection
+      v-if="loggedIn"
       id="journey"
       title="From idea to building: the construction journey"
       description="Every tool here belongs to a stage of a real building project. Start where you are; each stage tells you what it is, who is involved and what comes next."
@@ -57,7 +86,7 @@ const bills = [
       </ol>
     </UPageSection>
 
-    <UPageSection id="prerequisites" title="Stage 2 · What you need for a successful BQ" description="A Bill of Quantities is only as good as the documents it is measured from. These are what a quantity surveyor asks for, and what this system does when something is missing." :ui="{ title: 'font-display', container: 'py-10 sm:py-14' }">
+    <UPageSection v-if="loggedIn" id="prerequisites" title="Stage 2 · What you need for a successful BQ" description="A Bill of Quantities is only as good as the documents it is measured from. These are what a quantity surveyor asks for, and what this system does when something is missing." :ui="{ title: 'font-display', container: 'py-10 sm:py-14' }">
       <div class="grid lg:grid-cols-2 gap-4">
         <div v-for="p in PREREQUISITES" :key="p.key" class="rounded-xl border border-default p-5">
           <div class="flex items-center gap-2">
@@ -80,7 +109,7 @@ const bills = [
       </div>
     </UPageSection>
 
-    <UPageSection title="The standard Kenyan BQ layout" description="Drafts follow the bill structure used in Kenyan tender documents. Each item is described, measured (unit × quantity) and priced (rate → amount)." :ui="{ title: 'font-display', container: 'py-10 sm:py-14' }">
+    <UPageSection v-if="loggedIn" title="The standard Kenyan BQ layout" description="Drafts follow the bill structure used in Kenyan tender documents. Each item is described, measured (unit × quantity) and priced (rate → amount)." :ui="{ title: 'font-display', container: 'py-10 sm:py-14' }">
       <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <div v-for="[n, t] in bills" :key="t" class="rounded-lg border border-default px-4 py-3 flex gap-3 items-center">
           <span class="size-7 rounded-md bg-primary/10 text-primary grid place-items-center font-bold text-sm shrink-0">{{ n }}</span>
