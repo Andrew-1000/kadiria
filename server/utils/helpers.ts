@@ -45,7 +45,7 @@ export function parseQuery<T extends z.ZodType>(event: H3Event, schema: T): z.in
 export async function requireUser(event: H3Event, roles?: Role[]): Promise<SessionUser> {
   const header = getHeader(event, 'authorization') ?? ''
   let user: SessionUser
-  if (header.startsWith('Bearer ') && !header.startsWith('Bearer dvk_')) {
+  if (header.startsWith('Bearer ') && !header.startsWith('Bearer kdr_') && !header.startsWith('Bearer dvk_')) {
     const uid = await readToken(header.slice(7).trim())
     if (!uid) throw createError({ statusCode: 401, statusMessage: 'Your session has expired. Please sign in again.' })
     const [row] = await useDb().select().from(tables.users).where(eq(tables.users.id, uid))

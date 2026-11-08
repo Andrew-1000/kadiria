@@ -2,7 +2,7 @@
 import type { BqLine, PricedMaterial, ResultLine } from '#shared/calc/types'
 
 /*
- * Davecore Materials Takeoff: a cross-section drawing of the building is the menu. Click a part
+ * Kadiria Materials Takeoff: a cross-section drawing of the building is the menu. Click a part
  * of the section (trench, footing, slab, wall, beam...) to take off its materials; results come
  * out as a supplier's delivery docket. Calculations are the standard module engine.
  */
@@ -182,7 +182,7 @@ function printReport() {
         <header class="flex flex-wrap items-stretch border-b border-default">
           <div class="flex-1 min-w-[16rem] px-5 py-4">
             <p class="text-[10px] uppercase tracking-[0.25em] text-muted">
-              Davecore · Materials takeoff
+              Kadiria · Materials takeoff
             </p>
             <h2 class="font-display text-2xl sm:text-3xl font-bold text-highlighted mt-1">
               Pick a part of the building
@@ -226,7 +226,7 @@ function printReport() {
             <UInput v-model="settings.projectName" placeholder="e.g. Kiambu Bungalow" class="w-full" />
           </UFormField>
           <p class="col-span-2 md:col-span-4 self-end text-xs text-muted">
-            Leave rates blank to use Davecore's {{ currency }} list prices for the selected area.
+            Leave rates blank to use the current {{ currency }} list prices for the selected area.
           </p>
         </div>
 

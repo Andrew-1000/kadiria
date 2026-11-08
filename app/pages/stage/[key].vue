@@ -14,7 +14,7 @@ const slug = String(route.params.key) as Slug
 if (!(slug in SLUGS)) throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
 const stageKey = SLUGS[slug]
 const stage = journeyStage(stageKey)
-useSeoMeta({ title: `${stage.title} | Davecore BQ` })
+useSeoMeta({ title: `${stage.title} | Kadiria` })
 
 const { loggedIn, user } = useUserSession()
 const answers = usePrereqAnswers()

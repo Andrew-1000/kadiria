@@ -1,0 +1,10 @@
+# Kadiria on Netlify. Connect the GitHub repo once; every push to main deploys.
+# Set these in Netlify → Site configuration → Environment variables (never commit them):
+#   DATABASE_URL           Supabase "Transaction pooler" connection string (port 6543)
+#   NUXT_SESSION_PASSWORD  32+ random characters (seals sign-in cookies)
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"

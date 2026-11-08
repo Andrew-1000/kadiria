@@ -1,5 +1,5 @@
 <script setup lang="ts">
-useSeoMeta({ title: 'Create account | Davecore BQ' })
+useSeoMeta({ title: 'Create account | Kadiria' })
 const route = useRoute()
 const { fetch: refreshSession } = useUserSession()
 const { data: config } = await useBqConfig()

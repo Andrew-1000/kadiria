@@ -37,7 +37,7 @@ async function setStatus(e: Enquiry, status: string) {
     </template>
     <template #body>
       <p class="text-sm text-muted">
-        Contact, consultation, quote and plan enquiries sent from the company websites (Davecore, Desseo). Add each website's address under Website integration so its forms are accepted.
+        Contact, consultation, quote and plan enquiries sent from connected company websites. Add each website's address under Website integration so its forms are accepted.
       </p>
       <div v-if="!filtered.length" class="text-center py-16 border border-dashed border-default rounded-xl text-muted">
         No enquiries yet.

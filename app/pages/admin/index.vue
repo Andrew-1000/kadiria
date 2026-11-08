@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'dashboard', middleware: 'admin' })
-useSeoMeta({ title: 'Admin | Davecore BQ' })
+useSeoMeta({ title: 'Admin | Kadiria' })
 
 interface Stats {
   counts: Record<'users' | 'projects' | 'issued' | 'leads' | 'newLeads' | 'materials', number>

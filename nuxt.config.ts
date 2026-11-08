@@ -7,13 +7,14 @@ export default defineNuxtConfig({
   colorMode: { preference: 'dark', fallback: 'dark' },
   app: {
     head: {
-      title: 'Davecore BQ',
-      meta: [{ name: 'description', content: 'Construction cost estimates, material quantities and professional Bills of Quantities for Kenya.' }]
+      title: 'Kadiria',
+      meta: [{ name: 'description', content: 'Kadiria: construction cost estimates, material quantities and professional Bills of Quantities for Kenya.' }],
+      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }]
     }
   },
   runtimeConfig: {
     public: {
-      siteName: 'Davecore BQ'
+      siteName: 'Kadiria'
     }
   },
   routeRules: {

@@ -1,11 +1,13 @@
-# Davecore BQ: Bill of Quantities subsystem
+# Kadiria
 
-A standalone **Nuxt 4 + Vue 3 + PostgreSQL** service for construction cost estimation, material quantification and professional Bills of Quantities. It runs as its own service, and the Davecore company website plugs it in by embedding pages, calling its JSON API, or switching features on and off with an API key.
+**Kadiria** (Swahili for "estimate, work out the cost") is a standalone **Nuxt 4 + Vue 3 + PostgreSQL** product for construction cost estimation, material quantification and professional Bills of Quantities in Kenya.
+
+It runs as its own service. Company websites plug it in by embedding its calculators, calling its JSON API, or switching features on and off with an API key.
 
 | Audience | What they get |
 | --- | --- |
 | Homeowners | **Construction Cost Calculator**: location + house type + floor areas + finish → total, range, labour, add-ons, budget check, elemental breakdown, "request a detailed BQ" |
-| Fundis / site staff | **Material Quantification Modules** (12): excavation, hardcore, blinding, strip footing, column bases, foundation walling, columns, beams, ground slab, suspended slab, walling, plaster, with formulas shown and materials priced for the location |
+| Fundis / site staff | **Material Quantification Modules** (15): excavation, hardcore, blinding, strip footing, column bases, foundation walling, columns, beams, ground slab, suspended slab, walling, roofing, plaster, tiling, painting, with formulas shown and materials priced for the location |
 | QS / contractors / developers | **BQ projects**: a prerequisites-first wizard drafts the standard Kenyan bills (Preliminaries → Provisional & PC Sums); inline editing, library items, calculator → BQ, contingency + VAT summary, review → approve → issue workflow with immutable revisions, print/PDF and CSV |
 | Admin | **Back-office** for feature switches, locations and cost-per-m² bands, materials and effective-dated prices, mix designs, engineering constants, module defaults, the BQ library, users, leads, website integration and the audit log |
 
@@ -25,7 +27,7 @@ Requires Node.js 20+ and PostgreSQL 14+.
 npm install
 
 # 1. Configure the environment
-copy .env.example .env      # then edit: choose a password for davecore_bq in DATABASE_URL,
+copy .env.example .env      # then edit: choose a password for the kadiria user in DATABASE_URL,
                             # set NUXT_SESSION_PASSWORD (32+ chars) and SEED_ADMIN_*
 
 # 2. Create the database user + database from DATABASE_URL
@@ -39,7 +41,7 @@ npm run db:setup
 npm run dev                 # http://localhost:3000
 ```
 
-If the dev server prints **"Davecore BQ cannot use the database"**, it tells you which step is missing (placeholder password, wrong password, missing database or missing tables).
+If the dev server prints **"Kadiria cannot use the database"**, it tells you which step is missing (placeholder password, wrong password, missing database or missing tables).
 
 Forgot the `postgres` superuser password? Temporarily set `host all all 127.0.0.1/32 trust` in `pg_hba.conf` (in the PostgreSQL data folder), restart the PostgreSQL service, run `ALTER USER postgres PASSWORD 'new-password';` in psql, then restore the original line and restart again.
 
@@ -53,6 +55,36 @@ Sign in with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`, then open **Admin back-
 | `npm run db:generate` | Generate a migration after editing `server/db/schema.ts` |
 | `npm run db:migrate` / `db:seed` / `db:setup` | Apply migrations / seed / both |
 | `npm run db:studio` | Browse the database (Drizzle Studio) |
+
+## Deploying: Netlify + Supabase
+
+Kadiria runs on **Netlify**, which deploys automatically on every push to `main`. Its database is a dedicated **Supabase** project. Don't share the project with a website that uses Supabase's public API.
+
+**1. Database (Supabase)**
+
+1. Create a new project at <https://supabase.com>, e.g. `kadiria`, in the Frankfurt region. Save the database password.
+2. Click **Connect** (top of the dashboard) and copy two connection strings:
+   - **Transaction pooler** (port `6543`), for Netlify.
+   - **Session pooler** (port `5432`), for running migrations from your computer.
+3. From this folder, create the tables, reference data and first admin:
+   ```powershell
+   $env:DATABASE_URL = "<session pooler string, with your password>"
+   $env:SEED_ADMIN_EMAIL = "you@example.com"; $env:SEED_ADMIN_PASSWORD = "<a strong password>"
+   npm run db:setup
+   ```
+   Migration `0004_hardening` removes Supabase's public API roles (`anon`, `authenticated`) from every table and turns on row-level security. Kadiria connects directly and never uses that API.
+
+**2. App (Netlify)**
+
+1. Push this repo to GitHub. In Netlify, choose **Add new project → Import an existing project → GitHub** and pick the repo. The build settings come from `netlify.toml`.
+2. Under **Site configuration → Environment variables**, add:
+   - `DATABASE_URL`: the transaction pooler string (port `6543`), with your password.
+   - `NUXT_SESSION_PASSWORD`: 32+ random characters.
+3. Deploy. Then sign in, and under **Admin → Website integration**:
+   - add each website that embeds Kadiria (e.g. `https://andrew-1000.github.io`);
+   - set the **Name printed on documents**.
+
+The connection code (`server/db/connection.ts`) turns on SSL for Supabase, disables prepared statements on the transaction pooler and keeps connections low on serverless hosts.
 
 ## How the admin drives accuracy
 
@@ -73,13 +105,13 @@ Before drafting, the user records which documents they have (architectural drawi
 
 Every gap is written into the BQ's assumptions.
 
-## Integrating with the company website
+## Integrating with company websites
 
-1. **Admin → Website integration**: add the website origin (e.g. `https://www.davecore.co.ke`).
-2. Embed: `<iframe src="https://bq.example.com/embed/estimate">` and `/embed/calculators?module=blinding`. `frame-ancestors` only allows approved origins.
+1. **Admin → Website integration**: add the website origin (e.g. `https://www.example.co.ke`).
+2. Embed: `<iframe src="https://kadiria.example.com/embed/estimate">` and `/embed/calculators?module=blinding`. `frame-ancestors` only allows approved origins.
 3. Or call the public API (CORS for approved origins): `GET /api/public/features`, `GET /api/public/config`, `POST /api/public/estimate`, `POST /api/public/modules/{key}`.
 4. Create an **API key**. The website's admin can then switch calculators on/off server-to-server:
-   `PUT /api/integration/features/cost_estimator {"enabled": false}` or `PUT /api/integration/features/module:blinding {...}` with `Authorization: Bearer dvk_...`.
+   `PUT /api/integration/features/cost_estimator {"enabled": false}` or `PUT /api/integration/features/module:blinding {...}` with `Authorization: Bearer kdr_...`. Older `dvk_` keys still work.
 
 ## Roles
 

@@ -1,9 +1,9 @@
 {
-  "name": "davecore-bq",
+  "name": "kadiria",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Davecore BQ subsystem: construction cost estimator, material quantification calculators and professional Bill of Quantities drafting, backed by PostgreSQL.",
+  "description": "Kadiria: construction cost estimator, material quantification calculators and professional Bill of Quantities drafting, backed by PostgreSQL.",
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",

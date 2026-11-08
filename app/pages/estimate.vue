@@ -1,5 +1,5 @@
 <script setup lang="ts">
-useSeoMeta({ title: 'Construction Cost Calculator | Davecore BQ' })
+useSeoMeta({ title: 'Construction Cost Calculator | Kadiria' })
 </script>
 
 <template>

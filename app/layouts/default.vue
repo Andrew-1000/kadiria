@@ -31,7 +31,7 @@ const links = computed(() => [
     <UFooter :ui="{ root: 'no-print' }">
       <template #left>
         <p class="text-sm text-muted">
-          © {{ new Date().getFullYear() }} Davecore Construction · Estimates are indicative; confirm with a registered quantity surveyor.
+          © {{ new Date().getFullYear() }} Kadiria · Estimates are indicative; confirm with a registered quantity surveyor.
         </p>
       </template>
     </UFooter>

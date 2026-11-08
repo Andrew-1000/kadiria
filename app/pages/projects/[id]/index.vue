@@ -9,7 +9,7 @@ const { data: project, refresh, error } = await useFetch<ProjectDetail>(() => `/
 const { data: config } = await useBqConfig()
 const { user } = useUserSession()
 const { call, toast } = useApi()
-useSeoMeta({ title: () => `${project.value?.name ?? 'BQ'} | Davecore BQ` })
+useSeoMeta({ title: () => `${project.value?.name ?? 'BQ'} | Kadiria` })
 
 const editable = computed(() => project.value?.status === 'draft')
 const { rows: pagedDocs, page: docPage, pageSize: docPageSize, total: docTotal, from: docFrom, to: docTo } = usePaged(() => project.value?.documents ?? [], 'project:revisions')

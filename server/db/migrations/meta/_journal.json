@@ -29,6 +29,13 @@
       "when": 1794090958525,
       "tag": "0003_site_enquiries",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794127435426,
+      "tag": "0004_hardening",
+      "breakpoints": true
     }
   ]
 }

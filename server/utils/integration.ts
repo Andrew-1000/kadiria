@@ -5,15 +5,15 @@ import { and, eq, isNull } from 'drizzle-orm'
 export const hashKey = (key: string) => createHash('sha256').update(key).digest('hex')
 
 export function newApiKey() {
-  const key = `dvk_${randomBytes(24).toString('base64url')}`
+  const key = `kdr_${randomBytes(24).toString('base64url')}`
   return { key, prefix: key.slice(0, 10), keyHash: hashKey(key) }
 }
 
-/** Authenticate a server-to-server call from the company website (Authorization: Bearer dvk_...). */
+/** Authenticate a server-to-server call from the company website (Authorization: Bearer kdr_...). */
 export async function requireApiKey(event: H3Event) {
   const header = getHeader(event, 'authorization') ?? ''
   const key = header.startsWith('Bearer ') ? header.slice(7).trim() : ''
-  if (!key.startsWith('dvk_')) throw createError({ statusCode: 401, statusMessage: 'API key required.' })
+  if (!key.startsWith('kdr_') && !key.startsWith('dvk_')) throw createError({ statusCode: 401, statusMessage: 'API key required.' })
   const db = useDb()
   const [row] = await db.select().from(tables.apiKeys).where(and(eq(tables.apiKeys.keyHash, hashKey(key)), isNull(tables.apiKeys.revokedAt)))
   if (!row) throw createError({ statusCode: 401, statusMessage: 'Invalid or revoked API key.' })

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 const schema = z.object({
-  site: z.string().trim().regex(/^[a-z0-9-]{2,40}$/).default('davecore'),
+  site: z.string().trim().regex(/^[a-z0-9-]{2,40}$/).default('website'),
   kind: z.enum(['consultation', 'plan', 'contact', 'quote']).default('contact'),
   name: z.string().trim().min(2, 'Please enter your name').max(120),
   phone: z.string().trim().max(30).default(''),

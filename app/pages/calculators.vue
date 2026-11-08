@@ -1,5 +1,5 @@
 <script setup lang="ts">
-useSeoMeta({ title: 'Material Calculators | Davecore BQ' })
+useSeoMeta({ title: 'Material Calculators | Kadiria' })
 const route = useRoute()
 </script>
 

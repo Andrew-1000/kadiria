@@ -6,7 +6,7 @@ import { sql } from 'drizzle-orm'
  * later request logs.
  */
 export default defineNitroPlugin((nitroApp) => {
-  const banner = (msg: string) => console.error(`\n  ✖ Davecore BQ cannot use the database:\n    ${msg}\n    (see README → Getting started)\n`)
+  const banner = (msg: string) => console.error(`\n  ✖ Kadiria cannot use the database:\n    ${msg}\n    (see README → Getting started)\n`)
 
   setTimeout(async () => {
     try {

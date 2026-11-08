@@ -5,6 +5,7 @@ definePageMeta({ layout: false, middleware: 'admin' })
 
 const route = useRoute()
 const { data: r, error, status } = await useFetch<LeadReport>(`/api/admin/leads/${route.params.id}/report`, { server: false })
+const { data: brand } = await useFetch<{ issuer: string }>('/api/public/brand', { server: false })
 useSeoMeta({ title: () => r.value ? `${r.value.reference}: cost report for ${r.value.request.name}` : 'Cost report' })
 
 const money = (n: number | null | undefined) => formatNumber(n ?? null, 0)
@@ -42,7 +43,7 @@ function printNow() {
       <header class="flex flex-wrap items-start justify-between gap-6 border-b-2 border-neutral-800 pb-5">
         <div>
           <p class="tracking-[0.3em] text-xs uppercase text-neutral-500">
-            Davecore Construction
+            {{ brand?.issuer ?? 'Kadiria' }}
           </p>
           <h1 class="font-display text-3xl font-bold mt-2">
             Detailed cost report

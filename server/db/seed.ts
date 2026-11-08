@@ -5,10 +5,11 @@ import postgres from 'postgres'
 import * as s from './schema'
 import * as d from './seed-data'
 import { MODULES } from '../../shared/calc/modules'
+import { connectionOptions } from './connection'
 
 const url = process.env.DATABASE_URL
 if (!url) throw new Error('DATABASE_URL is not set (copy .env.example to .env).')
-const client = postgres(url, { max: 1, onnotice: () => {} })
+const client = postgres(url, connectionOptions(url, 1))
 const db = drizzle(client, { schema: s })
 const EFFECTIVE = '2026-01-01'
 

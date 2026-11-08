@@ -338,8 +338,8 @@ export const estimateRequests = pgTable('estimate_requests', {
 /** Contact, consultation and plan enquiries sent from the company websites. */
 export const siteEnquiries = pgTable('site_enquiries', {
   id: uuid('id').primaryKey().defaultRandom(),
-  /** Which website sent it, e.g. 'davecore' or 'desseo'. */
-  site: text('site').notNull().default('davecore'),
+  /** Which website sent it (its site key). */
+  site: text('site').notNull().default('website'),
   /** consultation | plan | contact | quote */
   kind: text('kind').notNull().default('contact'),
   name: text('name').notNull(),

@@ -2,7 +2,7 @@
 import { autoRate, estimate } from '#shared/calc/estimator'
 
 /*
- * Davecore Cost Plan: laid out like an architect's drawing sheet. The building is drawn as an
+ * Kadiria Cost Plan: laid out like an architect's drawing sheet. The building is drawn as an
  * elevation that grows with the floors you add; costs are annotated on the drawing and the
  * totals sit in a title block. Data and calculations are the standard estimator.
  */
@@ -196,7 +196,7 @@ const bqLink = computed(() => ({
         <header class="flex flex-wrap items-stretch border-b border-default">
           <div class="flex-1 min-w-[16rem] px-5 py-4">
             <p class="text-[10px] uppercase tracking-[0.25em] text-muted">
-              Davecore · Cost plan
+              Kadiria · Cost plan
             </p>
             <h1 class="font-display text-2xl sm:text-3xl font-bold text-highlighted mt-1">
               What will your building cost?

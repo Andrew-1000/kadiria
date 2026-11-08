@@ -7,6 +7,7 @@ const docId = typeof route.query.doc === 'string' ? route.query.doc : null
 
 const { data: live } = await useFetch<ProjectDetail>(`/api/projects/${id}`, { immediate: !docId })
 const { data: doc } = await useFetch<{ snapshot: ProjectDetail & { issuedByName?: string }, issuedAt: string, revision: number }>(`/api/projects/${id}/documents/${docId}`, { immediate: !!docId })
+const { data: brand } = await useFetch<{ issuer: string }>('/api/public/brand')
 const p = computed<ProjectDetail | null>(() => (docId ? doc.value?.snapshot : live.value) ?? null)
 useSeoMeta({ title: () => `${p.value?.name ?? 'BQ'}: Bill of Quantities` })
 
@@ -33,7 +34,7 @@ const issuedLabel = computed(() => doc.value ? `Issued ${new Date(doc.value.issu
       <section class="print-page min-h-[80vh] flex flex-col justify-between py-10">
         <div>
           <p class="tracking-[0.3em] text-xs uppercase text-neutral-500">
-            Davecore Construction
+            {{ brand?.issuer ?? 'Kadiria' }}
           </p>
           <h1 class="font-display text-4xl font-bold mt-10 leading-tight">
             {{ p.name }}

@@ -3,7 +3,7 @@ import { PREREQUISITES } from '#shared/calc/bq'
 
 const { data: config } = await useBqConfig()
 const { loggedIn } = useUserSession()
-useSeoMeta({ title: 'Davecore BQ: construction cost, materials & Bills of Quantities' })
+useSeoMeta({ title: 'Kadiria: construction cost, materials & Bills of Quantities' })
 
 const bills = [
   ['1', 'Preliminaries & General Items'], ['2', 'Substructure'], ['3', 'Superstructure'], ['4', 'Roofing'], ['5', 'Doors & Windows'],
@@ -15,7 +15,7 @@ const bills = [
   <div>
     <UPageHero
       title="Know what your building will cost before the first stone is laid"
-      description="Instant cost estimates for homeowners. Material quantities for fundis. Professional Bills of Quantities for quantity surveyors, contractors and developers. All on rates maintained by Davecore's team."
+      description="Instant cost estimates for homeowners. Material quantities for fundis. Professional Bills of Quantities for quantity surveyors, contractors and developers. All on current Kenyan rates, kept up to date by our team."
       :links="[
         ...(config?.flags.cost_estimator !== false ? [{ label: 'Estimate my build', to: '/estimate', icon: 'i-lucide-calculator', size: 'xl' as const }] : []),
         ...(config?.flags.bq_projects !== false ? [{ label: loggedIn ? 'Open my BQ projects' : 'Draft a professional BQ', to: loggedIn ? '/projects' : '/login?redirect=/projects/new', color: 'neutral' as const, variant: 'outline' as const, size: 'xl' as const, trailingIcon: 'i-lucide-arrow-right' }] : [])

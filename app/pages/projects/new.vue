@@ -2,7 +2,7 @@
 import { PREREQUISITES, readiness, computeDrivers, DEFAULT_PARAMS, DRIVERS, type PrereqStatus } from '#shared/calc/bq'
 
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
-useSeoMeta({ title: 'New BQ | Davecore BQ' })
+useSeoMeta({ title: 'New BQ | Kadiria' })
 
 const route = useRoute()
 const { data: config } = await useBqConfig()

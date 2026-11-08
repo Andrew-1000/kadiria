@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PREREQUISITES, readiness, type PrereqStatus } from '#shared/calc/bq'
 
-useSeoMeta({ title: 'Prepare documents | Davecore BQ' })
+useSeoMeta({ title: 'Prepare documents | Kadiria' })
 const { loggedIn } = useUserSession()
 const answers = usePrereqAnswers()
 
@@ -36,7 +36,7 @@ const wizardLink = computed(() => loggedIn.value ? '/projects/new' : '/login?red
     <div class="grid lg:grid-cols-[minmax(0,1fr)_20rem] gap-6 items-start">
       <section>
         <p class="text-[10px] uppercase tracking-[0.25em] text-muted">
-          Davecore · Document check
+          Kadiria · Document check
         </p>
         <h1 class="font-display text-3xl font-bold text-highlighted mt-1">
           What do you have ready?
