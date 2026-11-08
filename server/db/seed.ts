@@ -102,7 +102,10 @@ if (refsDocs.length) console.log(`✔ ${refsDocs.length} policy / reference docu
 // First administrator (same scrypt format as nuxt-auth-utils' hashPassword)
 const email = process.env.SEED_ADMIN_EMAIL
 const password = process.env.SEED_ADMIN_PASSWORD
-if (email && password) {
+if (email && password && password.length < 8) {
+  console.log('ℹ SEED_ADMIN_PASSWORD is shorter than 8 characters; no admin user created (use npm run db:admin with a stronger password).')
+}
+else if (email && password) {
   const [existing] = await db.select().from(s.users).where(sql`lower(${s.users.email}) = lower(${email})`)
   if (!existing) {
     const { hashPassword } = await import('./password')
